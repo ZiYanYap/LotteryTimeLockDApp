@@ -1,0 +1,200 @@
+body {
+    background-color: #0f1d29;
+    color: #d1dee3;
+    font-family: 'monospace';
+}
+
+/* Primary Header (H1) */
+h1 {
+    color: #f5b972;
+    font-size: 4.5em;
+    font-weight: bold;
+}
+
+/* Secondary Header (H2) */
+h2 {
+    color: #f5b972;
+    font-size: 2em;
+    font-weight: bold;
+}
+
+.navbar {
+    background-color: #0d1720;
+    border-bottom: 3px solid #c4a02b;
+}
+
+.nav-link {
+    color: #F5C486;
+}
+
+.navbar .nav-link.active {
+    color: #f8b864;
+}
+
+.footer {
+    background-color: #152330;
+    border-top: 3px solid #c4a02b;
+}
+
+.text-decoration-none {
+    color: white;
+}
+
+.card {
+    background-color: #00b8e6;
+}
+
+.text-overlay {
+    position: relative;
+    border-radius: 30px;
+    color: rgb(193, 187, 255);
+    overflow: hidden;
+}
+
+.text-overlay::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: url('block2.webp');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    filter: blur(5px);
+    z-index: -2;
+}
+
+.text-overlay::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: -1;
+}
+
+.text-overlay p {
+    position: relative;
+    z-index: 1;
+}
+
+.carousel-indicators {
+    list-style: none;
+    padding-left: 0;
+}
+
+.carousel-indicators li {
+    background-color: #000;
+    border-radius: 50%;
+    width: 10px;
+    height: 10px;
+    opacity: 0.5;
+}
+
+.carousel-indicators .active {
+    background-color: #fff;
+    opacity: 1;
+}
+
+.carousel-indicators li::after {
+    content: "";
+}
+
+.card {
+    position: relative;
+    border: 10px solid transparent;
+    box-shadow: 0 0 10px #ffffff;
+    transition: box-shadow 0.3s ease-in-out;
+}
+
+.card:hover {
+    box-shadow: 0 0 50px #c4a02b;
+}
+
+/* Button Style */
+button,
+.btn {
+    background-color: #f5b972;
+    color: #0f1d29;
+    font-size: 1em;
+    font-weight: bold;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 30px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+/* Button Hover Effect */
+.btnGetStarted:hover,
+.btnGetStarted:hover {
+    background-color: #f5a23e;
+    color: #0f1d29;
+}
+
+/* Accordion Header */
+.accordion-header {
+    background-color: #af5aec;
+    /* Purple from logo */
+}
+
+.accordion-button {
+    background-color: #6c13ac;
+    /* Purple from logo */
+    color: #FFFFFF;
+    /* White text */
+    border: none;
+}
+
+.accordion-button:not(.collapsed) {
+    color: #FFFFFF;
+    /* White text */
+    background-color: #6A0DAD;
+    /* Purple from logo */
+    box-shadow: inset 0 -1px 0 rgba(0, 0, 0, .125);
+}
+
+.accordion-button::after {
+    filter: invert(1);
+}
+
+/* Accordion Body */
+.accordion-body {
+    background-color: #0E1A2E;
+    /* Same as background */
+    color: #FFFFFF;
+    /* White text */
+}
+
+/* Accordion Item */
+.accordion-item {
+    background-color: #0E1A2E;
+    /* Dark blue/teal from logo */
+    border: 1px solid #FFFFFF;
+    /* White border */
+}
+
+.accordion-item .accordion-collapse {
+    border-top: 1px solid #FFFFFF;
+    /* White border */
+}
+
+/* Hover and Active State */
+.accordion-button:hover,
+.accordion-button:focus {
+    background-color: #5A0C94;
+    /* Slightly darker purple */
+    color: #FFFFFF;
+    /* White text */
+}
+
+.accordion-button:active {
+    background-color: #4A0A7B;
+    /* Even darker purple */
+    color: #FFFFFF;
+    /* White text */
+}

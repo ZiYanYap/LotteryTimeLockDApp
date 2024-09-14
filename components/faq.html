@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>test index</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+
+    <!-- Bootstrap JS Bundle (includes Popper) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+
+    <!-- Our css -->
+    <link rel="stylesheet" href="style.css" />
+</head>
+
+<body class="d-flex flex-column min-vh-100">
+    <!-- Content -->
+    <div class="flex-fill">
+        <div id="navbar-placeholder"></div>
+        <div class="container my-5">
+            <h1 class="text-center mb-5 fw-bold" style="font-size: 70px;">Frequently Asked Questions</h1>
+            <div class="accordion" id="faqAccordion">
+                <!-- Privacy Policy -->
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="headingOne">
+                        <button class="accordion-button fs-2 fw-bold" type="button" data-bs-toggle="collapse"
+                            data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                            Privacy Policy
+                        </button>
+                    </h2>
+                    <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne"
+                        data-bs-parent="#faqAccordion">
+                        <div class="accordion-body fs-4">
+                            <p>We collect user data such as wallet addresses and transaction details to process
+                                transactions and enhance user experience. Your data is stored securely and is protected
+                                from unauthorized access. We do not share your data with third parties except for
+                                essential service providers.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Terms of Service -->
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="headingTwo">
+                        <button class="accordion-button fs-2 collapsed fw-bold" type="button" data-bs-toggle="collapse"
+                            data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                            Terms of Service
+                        </button>
+                    </h2>
+                    <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo"
+                        data-bs-parent="#faqAccordion">
+                        <div class="accordion-body fs-4">
+                            <p>Participants must meet eligibility criteria, including age restrictions and compliance
+                                with local laws. Users are responsible for providing accurate information and adhering
+                                to our rules. We reserve the right to modify these terms at any time.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Refund and Cancellation Policy -->
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="headingThree">
+                        <button class="accordion-button fs-2 collapsed fw-bold" type="button" data-bs-toggle="collapse"
+                            data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                            Refund and Cancellation Policy
+                        </button>
+                    </h2>
+                    <div id="collapseThree" class="accordion-collapse collapse" aria-labelledby="headingThree"
+                        data-bs-parent="#faqAccordion">
+                        <div class="accordion-body fs-4">
+                            <p>You can cancel your ticket before the draw date and receive a partial refund. A
+                                processing fee of 2 USDT will be deducted. No refunds are available after the draw is
+                                executed.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Security Policy -->
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="headingFour">
+                        <button class="accordion-button fs-2 collapsed fw-bold" type="button" data-bs-toggle="collapse"
+                            data-bs-target="#collapseFour" aria-expanded="false" aria-controls="collapseFour">
+                            Security Policy
+                        </button>
+                    </h2>
+                    <div id="collapseFour" class="accordion-collapse collapse" aria-labelledby="headingFour"
+                        data-bs-parent="#faqAccordion">
+                        <div class="accordion-body fs-4">
+                            <p>We implement robust security measures, including smart contract audits and secure data
+                                storage, to protect your transactions and personal information. Users are encouraged to
+                                protect their wallet credentials and be vigilant against phishing attempts.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Ticket Purchase -->
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="headingFive">
+                        <button class="accordion-button fs-2 collapsed fw-bold" type="button" data-bs-toggle="collapse"
+                            data-bs-target="#collapseFive" aria-expanded="false" aria-controls="collapseFive">
+                            Ticket Purchase
+                        </button>
+                    </h2>
+                    <div id="collapseFive" class="accordion-collapse collapse" aria-labelledby="headingFive"
+                        data-bs-parent="#faqAccordion">
+                        <div class="accordion-body fs-4">
+                            <p>Each ticket costs 5 USDT, and there is a limit of 20 tickets per user. When you purchase
+                                a ticket, you receive a unique ticket ID associated with your wallet address.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Lottery Draw -->
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="headingSix">
+                        <button class="accordion-button fs-2 collapsed fw-bold" type="button" data-bs-toggle="collapse"
+                            data-bs-target="#collapseSix" aria-expanded="false" aria-controls="collapseSix">
+                            Lottery Draw
+                        </button>
+                    </h2>
+                    <div id="collapseSix" class="accordion-collapse collapse" aria-labelledby="headingSix"
+                        data-bs-parent="#faqAccordion">
+                        <div class="accordion-body fs-4">
+                            <p>The lottery draw is scheduled at the end of each week and is conducted using a secure
+                                random number generator. The draw is automated by the TimeLock smart contract, ensuring
+                                transparency and fairness.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Prize Distribution -->
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="headingSeven">
+                        <button class="accordion-button fs-2 collapsed fw-bold" type="button" data-bs-toggle="collapse"
+                            data-bs-target="#collapseSeven" aria-expanded="false" aria-controls="collapseSeven">
+                            Prize Distribution
+                        </button>
+                    </h2>
+                    <div id="collapseSeven" class="accordion-collapse collapse" aria-labelledby="headingSeven"
+                        data-bs-parent="#faqAccordion">
+                        <div class="accordion-body fs-4">
+                            <p>70% of the ticket sales are allocated to the prize pool. Prizes are distributed to the
+                                winner's wallet address after the draw, with different prize amounts for different
+                                places.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- No Winners Policy -->
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="headingEight">
+                        <button class="accordion-button fs-2 collapsed fw-bold" type="button" data-bs-toggle="collapse"
+                            data-bs-target="#collapseEight" aria-expanded="false" aria-controls="collapseEight">
+                            No Winners Policy
+                        </button>
+                    </h2>
+                    <div id="collapseEight" class="accordion-collapse collapse" aria-labelledby="headingEight"
+                        data-bs-parent="#faqAccordion">
+                        <div class="accordion-body fs-4">
+                            <p>If there are no winners in a draw, the prize pool is carried over to the next draw,
+                                increasing the potential prize amount.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div id="footer-placeholder"></div>
+
+    <!-- Navbar and Footer -->
+    <script src="callNavFooter.js"></script>
+</body>
+
+</html>
