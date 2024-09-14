@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
     // Load the navbar and footer HTML into the main document
-    fetch('navbar.html')
+    fetch('../components/navbar.html')
         .then(response => response.text())
         .then(data => {
             document.getElementById('navbar-placeholder').innerHTML = data;
@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
             setActiveNavLink();
         });
 
-    fetch('footer.html')
+    fetch('../components/footer.html')
         .then(response => response.text())
         .then(data => {
             document.getElementById('footer-placeholder').innerHTML = data;
