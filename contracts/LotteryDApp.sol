@@ -120,6 +120,8 @@ contract LotteryDApp {
         // Emit event to record the draw results
         emit DrawExecuted(firstPrizeNumber, secondPrizeNumber, thirdPrizeNumber);
 
+        //distribute prize first then only the below
+
         lastDrawTime = block.timestamp; // Set lastDrawTime to current time
         _updateTimesForNextDraw(); // Schedule next draw
     }
