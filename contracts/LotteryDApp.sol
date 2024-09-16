@@ -2,24 +2,32 @@
 pragma solidity ^0.8.0;
 
 contract LotteryDApp {
+    // Mappings to store ticket and ownership information per drawId
     mapping(uint256 => mapping(address => uint256[])) public userTickets; // Stores the list of tickets per user per drawId
     mapping(uint256 => mapping(uint256 => address[])) public ticketOwners; // Stores the owners for each ticket number per drawId
-    address[] public participants; // Track participants who have purchased tickets
 
+    // Track participants who have purchased tickets
+    address[] public participants;
+
+    // Configuration and constants
     address public immutable developer; // Developer's address, immutable
     uint256 public ticketPrice = 1 ether; // Price per ticket
     uint256 public drawInterval = 10 minutes; // Interval between draws, default is 10 minutes, admin can change
     uint256 public cancellationDeadlineOffset = 2 minutes; // Time before the draw when cancellations are allowed
     uint256 public salesCloseTimeOffset = 1 minutes; // Time before the draw when ticket sales close
+
+    // Prize distribution percentages
     uint256 public developerFeePercentage = 5; // Developer receives 5% of the total prize pool
     uint256 public firstPrizePercentage = 50; // First prize gets 50% of the prize pool
     uint256 public secondPrizePercentage = 30; // Second prize gets 30%
     uint256 public thirdPrizePercentage = 20; // Third prize gets 20%
 
+    // Winning ticket numbers for the current draw
     uint256 public firstPrizeNumber;
     uint256 public secondPrizeNumber;
     uint256 public thirdPrizeNumber;
 
+    // Draw tracking and management
     uint256 public drawId; // Track the current draw ID
     uint256 public uniqueParticipantsCount; // Tracks the number of unique participants in a draw
     uint256 public lastDrawTime; // The time of the last draw (or cancellation time)
@@ -27,10 +35,11 @@ contract LotteryDApp {
     uint256 public salesCloseTime; // Actual sales close time for the current draw
     bool public drawExecuted = false; // Indicates if the draw has been executed
 
-    event TicketPurchased(address indexed buyer, uint256 ticketNumber);
-    event TicketCancelled(address indexed user, uint256 ticketNumber, uint256 refundAmount);
-    event DrawExecuted(uint256 firstPrizeNumber, uint256 secondPrizeNumber, uint256 thirdPrizeNumber);
-    event PrizeDistributed(address indexed winner, uint256 amount);
+    // Events
+    event TicketPurchased(address indexed buyer, uint256 ticketNumber, uint256 drawId);
+    event TicketCancelled(address indexed user, uint256 ticketNumber, uint256 refundAmount, uint256 drawId);
+    event DrawExecuted(uint256 firstPrizeNumber, uint256 secondPrizeNumber, uint256 thirdPrizeNumber, uint256 drawId);
+    event PrizeDistributed(address indexed winner, uint256 amount, uint256 prizeTier, uint256 drawId);
 
     constructor(uint256 _firstDrawTime) {
         require(_firstDrawTime >= block.timestamp + drawInterval, "First draw time must be in the future and greater than or equal to the draw interval");
@@ -98,7 +107,7 @@ contract LotteryDApp {
             uniqueParticipantsCount++;
         }
 
-        emit TicketPurchased(msg.sender, ticketNumber);
+        emit TicketPurchased(msg.sender, ticketNumber, drawId);
     }
 
     // Function to cancel a purchased ticket
@@ -131,7 +140,7 @@ contract LotteryDApp {
         // Send the 10% penalty to the developer
         payable(developer).transfer(developerFee);
 
-        emit TicketCancelled(msg.sender, ticketNumber, refundAmount);
+        emit TicketCancelled(msg.sender, ticketNumber, refundAmount, drawId);
     }
 
     // Function to execute the lottery draw
@@ -145,7 +154,7 @@ contract LotteryDApp {
         drawExecuted = true;
 
         // Emit event to record the draw results
-        emit DrawExecuted(firstPrizeNumber, secondPrizeNumber, thirdPrizeNumber);
+        emit DrawExecuted(firstPrizeNumber, secondPrizeNumber, thirdPrizeNumber, drawId);
 
         // Distribute prizes immediately after draw
         _distributePrizes();
@@ -211,13 +220,13 @@ contract LotteryDApp {
         payable(developer).transfer(developerFee);
 
         // Distribute prizes
-        _distributePrizeTier(firstPrizeNumber, firstPrizeAmount);
-        _distributePrizeTier(secondPrizeNumber, secondPrizeAmount);
-        _distributePrizeTier(thirdPrizeNumber, thirdPrizeAmount);
+        _distributePrizeTier(firstPrizeNumber, firstPrizeAmount, 1);
+        _distributePrizeTier(secondPrizeNumber, secondPrizeAmount, 2);
+        _distributePrizeTier(thirdPrizeNumber, thirdPrizeAmount, 3);
     }
 
     // Helper function to distribute prizes to a prize tier
-    function _distributePrizeTier(uint256 prizeNumber, uint256 prizeAmount) private {
+    function _distributePrizeTier(uint256 prizeNumber, uint256 prizeAmount, uint256 prizeTier) private {
         address[] memory winners = ticketOwners[drawId][prizeNumber];
         uint256 winnerCount = winners.length;
 
@@ -226,7 +235,7 @@ contract LotteryDApp {
 
             for (uint256 i = 0; i < winnerCount; i++) {
                 payable(winners[i]).transfer(prizePerWinner);
-                emit PrizeDistributed(winners[i], prizePerWinner);
+                emit PrizeDistributed(winners[i], prizePerWinner, prizeTier, drawId);
             }
         }
     }
