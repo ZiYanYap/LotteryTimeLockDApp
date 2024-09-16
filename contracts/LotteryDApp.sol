@@ -110,7 +110,7 @@ contract LotteryDApp {
 
     // Function to cancel a purchased ticket
     function cancelTicket(uint256 ticketNumber) external {
-        require(block.timestamp <= cancellationDeadline, "Cancellation period is over");
+        require(block.timestamp < cancellationDeadline, "Cancellation period is over");
         require(_hasUserPurchasedTicket(msg.sender, ticketNumber), "You don't own this ticket");
 
         _removeUserTicket(msg.sender, ticketNumber);
