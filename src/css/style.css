@@ -44,6 +44,10 @@ h2 {
     background-color: #00ccffd9;
 }
 
+.card-title {
+    font-family: 'Trebuchet MS', sans-serif;
+}
+
 .text-overlay {
     position: relative;
     border-radius: 30px;
