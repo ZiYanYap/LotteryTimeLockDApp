@@ -5,9 +5,8 @@ contract LotteryDApp {
     // Mappings to store ticket and ownership information per drawId
     mapping(uint256 => mapping(address => uint256[])) public userTickets; // Stores the list of tickets per user per drawId
     mapping(uint256 => mapping(uint256 => address[])) public ticketOwners; // Stores the owners for each ticket number per drawId
-
-    // Track participants who have purchased tickets
-    address[] public participants;
+    mapping(uint256 => address[]) public participants; // Each drawId has its own array of participants
+    mapping(uint256 => mapping(address => uint256)) public participantIndex; // Tracks index of each participant per drawId
 
     // Configuration and constants
     address public immutable developer; // Developer's address, immutable
@@ -33,13 +32,12 @@ contract LotteryDApp {
     uint256 public lastDrawTime; // The time of the last draw (or cancellation time)
     uint256 public cancellationDeadline; // Actual cancellation deadline for the current draw
     uint256 public salesCloseTime; // Actual sales close time for the current draw
-    bool public drawExecuted = false; // Indicates if the draw has been executed
 
     // Events
     event TicketPurchased(address indexed buyer, uint256 ticketNumber, uint256 drawId);
     event TicketCancelled(address indexed user, uint256 ticketNumber, uint256 refundAmount, uint256 drawId);
     event DrawExecuted(uint256 firstPrizeNumber, uint256 secondPrizeNumber, uint256 thirdPrizeNumber, uint256 drawId);
-    event PrizeDistributed(address indexed winner, uint256 amount, uint256 prizeTier, uint256 drawId);
+    event PrizeTierDistributed(uint256 indexed drawId, uint256 prizeTier, uint256 totalPrizeAmount, uint256 winnerCount);
 
     constructor(uint256 _firstDrawTime) {
         require(_firstDrawTime >= block.timestamp + drawInterval, "First draw time must be in the future and greater than or equal to the draw interval");
@@ -56,7 +54,6 @@ contract LotteryDApp {
     modifier canExecuteDraw() {
         require(block.timestamp >= lastDrawTime + drawInterval, "Draw cannot be executed yet.");
         require(uniqueParticipantsCount >= 3, "Not enough participants to execute the draw");
-        require(!drawExecuted, "Draw already executed for this round");
         _;
     }
 
@@ -103,7 +100,8 @@ contract LotteryDApp {
 
         // If this is the user's first ticket, increase the unique participant count
         if (userTickets[drawId][msg.sender].length == 1) {
-            participants.push(msg.sender);
+            participants[drawId].push(msg.sender);
+            participantIndex[drawId][msg.sender] = uniqueParticipantsCount;
             uniqueParticipantsCount++;
         }
 
@@ -120,13 +118,16 @@ contract LotteryDApp {
 
         // Remove the participant and adjust the unique participant count if the user has no more tickets
         if (userTickets[drawId][msg.sender].length == 0) {
-            for (uint256 i = 0; i < uniqueParticipantsCount; i++) {
-                if (participants[i] == msg.sender) {
-                    participants[i] = participants[uniqueParticipantsCount - 1]; // Replace with last element
-                    participants.pop(); // Remove the last element
-                    break;
-                }
+            uint256 index = participantIndex[drawId][msg.sender]; // Get the participant's index
+            if (uniqueParticipantsCount == 1) {
+                // If there's only one participant, simply pop the array
+                participants[drawId].pop(); // Remove the only participant
+            } else {
+                participants[drawId][index] = participants[drawId][uniqueParticipantsCount - 1]; // Replace with last element
+                participantIndex[drawId][participants[drawId][index]] = index; // Update the index of the swapped participant
+                participants[drawId].pop(); // Remove the last element
             }
+            delete participantIndex[drawId][msg.sender]; // Remove from mapping
             uniqueParticipantsCount--;
         }
 
@@ -150,9 +151,6 @@ contract LotteryDApp {
         secondPrizeNumber = _generateRandomNumber(2);
         thirdPrizeNumber = _generateRandomNumber(3);
 
-        // Set the draw as executed
-        drawExecuted = true;
-
         // Emit event to record the draw results
         emit DrawExecuted(firstPrizeNumber, secondPrizeNumber, thirdPrizeNumber, drawId);
 
@@ -168,7 +166,6 @@ contract LotteryDApp {
     function cancelDraw() external onlyAdmin {
         require(block.timestamp >= salesCloseTime, "Draw can only be cancelled after sales close.");
         require(uniqueParticipantsCount < 3, "Cannot cancel draw: 3 or more participants");
-        require(!drawExecuted, "Draw has already been executed");
 
         if (uniqueParticipantsCount > 0) {
             // Refund all participants and cancel the draw
@@ -183,8 +180,6 @@ contract LotteryDApp {
     function _resetForNextDraw() private {
         cancellationDeadline = lastDrawTime + drawInterval - cancellationDeadlineOffset;
         salesCloseTime = lastDrawTime + drawInterval - salesCloseTimeOffset;
-        drawExecuted = false;
-        delete participants;
         uniqueParticipantsCount = 0;
         drawId++;
     }
@@ -198,7 +193,7 @@ contract LotteryDApp {
     function _refundAllParticipants() private {
         // Loop through all participants and refund them
         for (uint256 i = 0; i < uniqueParticipantsCount; i++) {
-            address participant = participants[i];
+            address participant = participants[drawId][i];
             uint256 refundAmount = ticketPrice * userTickets[drawId][participant].length;
             payable(participant).transfer(refundAmount); // Refund the user
         }
@@ -225,6 +220,15 @@ contract LotteryDApp {
         _distributePrizeTier(thirdPrizeNumber, thirdPrizeAmount, 3);
     }
 
+    // Helper function to check if there are winners for any of the three prize numbers
+    function _hasWinners(uint256 prizeNumber1, uint256 prizeNumber2, uint256 prizeNumber3) private view returns (bool) {
+        return (
+            ticketOwners[drawId][prizeNumber1].length > 0 || 
+            ticketOwners[drawId][prizeNumber2].length > 0 || 
+            ticketOwners[drawId][prizeNumber3].length > 0
+        );
+    }
+
     // Helper function to distribute prizes to a prize tier
     function _distributePrizeTier(uint256 prizeNumber, uint256 prizeAmount, uint256 prizeTier) private {
         address[] memory winners = ticketOwners[drawId][prizeNumber];
@@ -235,9 +239,10 @@ contract LotteryDApp {
 
             for (uint256 i = 0; i < winnerCount; i++) {
                 payable(winners[i]).transfer(prizePerWinner);
-                emit PrizeDistributed(winners[i], prizePerWinner, prizeTier, drawId);
             }
         }
+
+        emit PrizeTierDistributed(drawId, prizeTier, prizeAmount, winnerCount);
     }
 
     // Helper function to check if a user has purchased a specific ticket number
