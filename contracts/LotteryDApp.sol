@@ -2,34 +2,41 @@
 pragma solidity ^0.8.0;
 
 contract LotteryDApp {
-    mapping(address => uint256[]) public userTickets; // Stores the list of tickets for each user
-    mapping(uint256 => address[]) public ticketOwners; // Stores the owners for each ticket number
-    mapping(address => bool) public hasParticipated; // Tracks if a user has participated in the current draw
+    mapping(uint256 => mapping(address => uint256[])) public userTickets; // Stores the list of tickets per user per drawId
+    mapping(uint256 => mapping(uint256 => address[])) public ticketOwners; // Stores the owners for each ticket number per drawId
+    address[] public participants; // Track participants who have purchased tickets
 
     address public immutable developer; // Developer's address, immutable
     uint256 public ticketPrice = 1 ether; // Price per ticket
     uint256 public drawInterval = 10 minutes; // Interval between draws, default is 10 minutes, admin can change
-    uint256 public lastDrawTime; // The time of the last draw (or cancellation time)
     uint256 public cancellationDeadlineOffset = 2 minutes; // Time before the draw when cancellations are allowed
     uint256 public salesCloseTimeOffset = 1 minutes; // Time before the draw when ticket sales close
-    uint256 public cancellationDeadline; // Actual cancellation deadline for the current draw
-    uint256 public salesCloseTime; // Actual sales close time for the current draw
-    bool public drawExecuted = false; // Indicates if the draw has been executed
-
-    address[] public participants; // Track participants who have purchased tickets
+    uint256 public developerFeePercentage = 5; // Developer receives 5% of the total prize pool
+    uint256 public firstPrizePercentage = 50; // First prize gets 50% of the prize pool
+    uint256 public secondPrizePercentage = 30; // Second prize gets 30%
+    uint256 public thirdPrizePercentage = 20; // Third prize gets 20%
 
     uint256 public firstPrizeNumber;
     uint256 public secondPrizeNumber;
     uint256 public thirdPrizeNumber;
 
+    uint256 public drawId; // Track the current draw ID
+    uint256 public uniqueParticipantsCount; // Tracks the number of unique participants in a draw
+    uint256 public lastDrawTime; // The time of the last draw (or cancellation time)
+    uint256 public cancellationDeadline; // Actual cancellation deadline for the current draw
+    uint256 public salesCloseTime; // Actual sales close time for the current draw
+    bool public drawExecuted = false; // Indicates if the draw has been executed
+
     event TicketPurchased(address indexed buyer, uint256 ticketNumber);
     event TicketCancelled(address indexed user, uint256 ticketNumber, uint256 refundAmount);
     event DrawExecuted(uint256 firstPrizeNumber, uint256 secondPrizeNumber, uint256 thirdPrizeNumber);
+    event PrizeDistributed(address indexed winner, uint256 amount);
 
     constructor(uint256 _firstDrawTime) {
+        require(_firstDrawTime >= block.timestamp + drawInterval, "First draw time must be in the future and greater than or equal to the draw interval");
         developer = msg.sender;
-        lastDrawTime = _firstDrawTime - drawInterval;
-        _updateTimesForNextDraw();
+        lastDrawTime = _firstDrawTime - drawInterval; // Set the last draw time to one interval before the first draw
+        _resetForNextDraw();
     }
 
     modifier onlyAdmin() {
@@ -39,42 +46,56 @@ contract LotteryDApp {
 
     modifier canExecuteDraw() {
         require(block.timestamp >= lastDrawTime + drawInterval, "Draw cannot be executed yet.");
-        require(participants.length >= 3, "Not enough participants to execute the draw");
+        require(uniqueParticipantsCount >= 3, "Not enough participants to execute the draw");
         require(!drawExecuted, "Draw already executed for this round");
         _;
     }
 
-    // Admin can change the draw interval, which will take effect on the next draw
-    function setDrawInterval(uint256 _newInterval) external onlyAdmin {
-        drawInterval = _newInterval;
+    // Admin can set draw interval, cancellation deadline offset, and sales close time offset together
+    function setDrawAndOffsets(uint256 newDrawInterval, uint256 newCancellationOffset, uint256 newSalesCloseOffset) external onlyAdmin {
+        require(newCancellationOffset < newDrawInterval, "Cancellation deadline offset must be less than the draw interval");
+        require(newSalesCloseOffset < newDrawInterval, "Sales close time offset must be less than the draw interval");
+        require(newCancellationOffset > newSalesCloseOffset, "Cancellation deadline offset must be greater than sales close time offset");
+
+        drawInterval = newDrawInterval;
+        cancellationDeadlineOffset = newCancellationOffset;
+        salesCloseTimeOffset = newSalesCloseOffset;
     }
 
-    // Admin can change the cancellation deadline offset for future draws
-    function setCancellationDeadlineOffset(uint256 _cancellationOffset) external onlyAdmin {
-        cancellationDeadlineOffset = _cancellationOffset;
+    // Admin function to adjust developer fee percentage
+    function setDeveloperFeePercentage(uint256 newDeveloperFeePercentage) external onlyAdmin {
+        require(newDeveloperFeePercentage <= 20, "Developer fee percentage must be <= 20%");
+        developerFeePercentage = newDeveloperFeePercentage;
     }
 
-    // Admin can change the sales close time offset for future draws
-    function setSalesCloseTimeOffset(uint256 _salesCloseOffset) external onlyAdmin {
-        salesCloseTimeOffset = _salesCloseOffset;
+    // Admin function to adjust prize percentages for 1st, 2nd, and 3rd prizes
+    function setPrizePercentages(uint256 newFirstPrizePercentage, uint256 newSecondPrizePercentage, uint256 newThirdPrizePercentage) external onlyAdmin {
+        require(newFirstPrizePercentage > 0 && newSecondPrizePercentage > 0 && newThirdPrizePercentage > 0, "Each prize percentage must be greater than 0");
+        require(newFirstPrizePercentage > newSecondPrizePercentage, "First prize percentage must be greater than second prize");
+        require(newSecondPrizePercentage > newThirdPrizePercentage, "Second prize percentage must be greater than third prize");
+        require(newFirstPrizePercentage + newSecondPrizePercentage + newThirdPrizePercentage == 100, "Prize percentages must add up to 100%");
+
+        firstPrizePercentage = newFirstPrizePercentage;
+        secondPrizePercentage = newSecondPrizePercentage;
+        thirdPrizePercentage = newThirdPrizePercentage;
     }
 
     // Function to buy a ticket
     function buyTicket(uint256 ticketNumber) external payable {
         require(block.timestamp < salesCloseTime, "Sales have closed for this draw");
         require(msg.value == ticketPrice, "Incorrect ticket price");
-        require(userTickets[msg.sender].length < 5, "Ticket purchase limit reached");
+        require(userTickets[drawId][msg.sender].length < 5, "Ticket purchase limit reached");
         require(ticketNumber >= 0 && ticketNumber <= 9999, "Ticket number must be a 4-digit number");
         require(!_hasUserPurchasedTicket(msg.sender, ticketNumber), "You have already purchased this ticket number.");
 
         // Add the ticket to the user's tickets and ticketOwners
-        userTickets[msg.sender].push(ticketNumber);
-        ticketOwners[ticketNumber].push(msg.sender);
+        userTickets[drawId][msg.sender].push(ticketNumber);
+        ticketOwners[drawId][ticketNumber].push(msg.sender);
 
         // If this is the user's first ticket, increase the unique participant count
-        if (!hasParticipated[msg.sender]) {
-            hasParticipated[msg.sender] = true;
+        if (userTickets[drawId][msg.sender].length == 1) {
             participants.push(msg.sender);
+            uniqueParticipantsCount++;
         }
 
         emit TicketPurchased(msg.sender, ticketNumber);
@@ -88,10 +109,16 @@ contract LotteryDApp {
         _removeUserTicket(msg.sender, ticketNumber);
         _removeTicketOwner(ticketNumber, msg.sender);
 
-        // Adjust the unique participant count if the user has no more tickets
-        if (userTickets[msg.sender].length == 0 && hasParticipated[msg.sender]) {
-            hasParticipated[msg.sender] = false;
-            _removeParticipant(msg.sender);
+        // Remove the participant and adjust the unique participant count if the user has no more tickets
+        if (userTickets[drawId][msg.sender].length == 0) {
+            for (uint256 i = 0; i < uniqueParticipantsCount; i++) {
+                if (participants[i] == msg.sender) {
+                    participants[i] = participants[uniqueParticipantsCount - 1]; // Replace with last element
+                    participants.pop(); // Remove the last element
+                    break;
+                }
+            }
+            uniqueParticipantsCount--;
         }
 
         // Calculate the refund (90% refund, 10% to the developer)
@@ -120,56 +147,95 @@ contract LotteryDApp {
         // Emit event to record the draw results
         emit DrawExecuted(firstPrizeNumber, secondPrizeNumber, thirdPrizeNumber);
 
-        //distribute prize first then only the below
+        // Distribute prizes immediately after draw
+        _distributePrizes();
 
-        lastDrawTime = block.timestamp; // Set lastDrawTime to current time
-        _updateTimesForNextDraw(); // Schedule next draw
+        // Update the draw time for the next draw
+        lastDrawTime = block.timestamp;
+        _resetForNextDraw(); // Reset and schedule for next draw
     }
 
     // Function to cancel the draw if fewer than 3 participants
     function cancelDraw() external onlyAdmin {
         require(block.timestamp >= salesCloseTime, "Draw can only be cancelled after sales close.");
-        require(participants.length < 3, "Cannot cancel draw: 3 or more participants");
+        require(uniqueParticipantsCount < 3, "Cannot cancel draw: 3 or more participants");
         require(!drawExecuted, "Draw has already been executed");
 
-        if (participants.length > 0) {
+        if (uniqueParticipantsCount > 0) {
             // Refund all participants and cancel the draw
             _refundAllParticipants();
         }
 
         lastDrawTime = block.timestamp; // Set lastDrawTime to cancellation time
-        _updateTimesForNextDraw(); // Schedule next draw
+        _resetForNextDraw(); // Reset and schedule for next draw
     }
 
     // Helper function to update times for the next draw
-    function _updateTimesForNextDraw() private {
+    function _resetForNextDraw() private {
         cancellationDeadline = lastDrawTime + drawInterval - cancellationDeadlineOffset;
         salesCloseTime = lastDrawTime + drawInterval - salesCloseTimeOffset;
         drawExecuted = false;
+        delete participants;
+        uniqueParticipantsCount = 0;
+        drawId++;
     }
 
     // Function to generate a random 4-digit number using block properties
     function _generateRandomNumber(uint256 seed) private view returns (uint256) {
-        return uint256(uint256(keccak256(abi.encodePacked(block.timestamp, block.difficulty, msg.sender, participants.length, seed))) % 10000);
+        return uint256(keccak256(abi.encodePacked(block.timestamp, block.difficulty, msg.sender, uniqueParticipantsCount, seed))) % 10000;
     }
 
     // Function to refund all participants if the draw is cancelled
     function _refundAllParticipants() private {
         // Loop through all participants and refund them
-        for (uint256 i = 0; i < participants.length; i++) {
+        for (uint256 i = 0; i < uniqueParticipantsCount; i++) {
             address participant = participants[i];
-            uint256 refundAmount = ticketPrice * userTickets[participant].length;
+            uint256 refundAmount = ticketPrice * userTickets[drawId][participant].length;
             payable(participant).transfer(refundAmount); // Refund the user
         }
+    }
 
-        delete participants; // Clear the participants array
+    // Helper function to distribute prizes
+    function _distributePrizes() private {
+        // Calculate the amounts for each prize tier after developer fee
+        uint256 contractBalance = address(this).balance;
+
+        uint256 developerFee = (contractBalance * developerFeePercentage) / 100;
+        uint256 prizePoolAfterFee = contractBalance - developerFee;
+
+        uint256 firstPrizeAmount = (prizePoolAfterFee * firstPrizePercentage) / 100;
+        uint256 secondPrizeAmount = (prizePoolAfterFee * secondPrizePercentage) / 100;
+        uint256 thirdPrizeAmount = (prizePoolAfterFee * thirdPrizePercentage) / 100;
+
+        // Transfer developer fee
+        payable(developer).transfer(developerFee);
+
+        // Distribute prizes
+        _distributePrizeTier(firstPrizeNumber, firstPrizeAmount);
+        _distributePrizeTier(secondPrizeNumber, secondPrizeAmount);
+        _distributePrizeTier(thirdPrizeNumber, thirdPrizeAmount);
+    }
+
+    // Helper function to distribute prizes to a prize tier
+    function _distributePrizeTier(uint256 prizeNumber, uint256 prizeAmount) private {
+        address[] memory winners = ticketOwners[drawId][prizeNumber];
+        uint256 winnerCount = winners.length;
+
+        if (winnerCount > 0) {
+            uint256 prizePerWinner = prizeAmount / winnerCount;
+
+            for (uint256 i = 0; i < winnerCount; i++) {
+                payable(winners[i]).transfer(prizePerWinner);
+                emit PrizeDistributed(winners[i], prizePerWinner);
+            }
+        }
     }
 
     // Helper function to check if a user has purchased a specific ticket number
     function _hasUserPurchasedTicket(address user, uint256 ticketNumber) private view returns (bool) {
-        uint256[] memory tickets = userTickets[user];
+        uint256[] memory tickets = userTickets[drawId][user];
 
-        for (uint8 i = 0; i < tickets.length; i++) {
+        for (uint256 i = 0; i < tickets.length; i++) {
             if (tickets[i] == ticketNumber) {
                 return true;
             }
@@ -179,16 +245,13 @@ contract LotteryDApp {
 
     // Helper function to remove a ticket from the user's ticket array
     function _removeUserTicket(address user, uint256 ticketNumber) private {
-        uint256[] storage tickets = userTickets[user];
+        uint256[] storage tickets = userTickets[drawId][user];
         uint256 length = tickets.length;
 
         for (uint256 i = 0; i < length; i++) {
             if (tickets[i] == ticketNumber) {
                 tickets[i] = tickets[length - 1]; // Replace with last element
                 tickets.pop(); // Remove the last element
-                if (tickets.length == 0) {
-                    delete userTickets[user];
-                }
                 break;
             }
         }
@@ -196,32 +259,13 @@ contract LotteryDApp {
 
     // Helper function to remove a user from the ticketOwners mapping for a specific ticket number
     function _removeTicketOwner(uint256 ticketNumber, address user) private {
-        address[] storage owners = ticketOwners[ticketNumber];
+        address[] storage owners = ticketOwners[drawId][ticketNumber];
         uint256 length = owners.length;
 
         for (uint256 i = 0; i < length; i++) {
             if (owners[i] == user) {
                 owners[i] = owners[length - 1]; // Replace with last element
                 owners.pop(); // Remove the last element
-                if (owners.length == 0) {
-                    delete ticketOwners[ticketNumber];
-                }
-                break;
-            }
-        }
-    }
-
-    // Helper function to remove a participant from the participants array
-    function _removeParticipant(address participant) private {
-        uint256 length = participants.length;
-
-        for (uint256 i = 0; i < length; i++) {
-            if (participants[i] == participant) {
-                participants[i] = participants[length - 1]; // Replace with last element
-                participants.pop(); // Remove the last element
-                if (participants.length == 0) {
-                    delete participants;
-                }
                 break;
             }
         }
