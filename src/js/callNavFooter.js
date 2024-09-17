@@ -7,6 +7,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Now that the navbar is loaded, apply the active class
             setActiveNavLink();
+
+            // Check if checkAdminAccess is defined before calling it
+            if (typeof window.checkAdminAccess === 'function') {
+                window.checkAdminAccess();  // Use window to ensure the global function is accessed
+            } else {
+                console.error('checkAdminAccess is not defined.');
+            }
         });
 
     fetch('footer.html')
@@ -17,12 +24,10 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function setActiveNavLink() {
-    // Get all the nav links
     const navLinks = document.querySelectorAll('.nav-link');
     const currentPath = window.location.pathname;
 
     navLinks.forEach(link => {
-        // Check if the href of the link matches the current URL
         if (link.getAttribute('href') === currentPath.split("/").pop()) {
             link.classList.add('active');
         } else {

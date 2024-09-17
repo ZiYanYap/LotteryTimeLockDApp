@@ -1,25 +1,42 @@
 <!-- navbar.html -->
-<nav class="navbar disable-bg-dark py-2" data-bs-theme="dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="../index.html">
-            <img src="images/winChainLogo.png" alt="WinChain" width="150" height="120">
-        </a>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.jsdelivr.net/npm/web3/dist/web3.min.js"></script>
+</head>
+<body>
+    <nav class="navbar disable-bg-dark py-2" data-bs-theme="dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="../index.html">
+                <img src="images/winChainLogo.png" alt="WinChain" width="150" height="120">
+            </a>
 
-        <ul class="nav nav-underline">
-            <li class="nav-item">
-                <a class="nav-link active fw-bold fs-4" aria-current="page" href="../index.html">Home</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link fw-bold fs-4" href="play.html" aria-current="page">Play</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link fw-bold fs-4" href="faq.html">Policies</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link fw-bold fs-4" href="account.html">
-                    <i class="bi bi-person"></i> Account
-                </a>
-            </li>
-        </ul>
-    </div>
-</nav>
+            <ul class="nav nav-underline">
+                <li class="nav-item">
+                    <a class="nav-link active fw-bold fs-4" aria-current="page" href="../index.html">Home</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link fw-bold fs-4" href="play.html" aria-current="page">Play</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link fw-bold fs-4" href="faq.html">Policies</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link fw-bold fs-4" href="account.html">
+                        <i class="bi bi-person"></i> Account
+                    </a>
+                </li>
+                <!-- Admin section, hidden by default -->
+                <li class="nav-item" id="adminNavItem" style="display: none;">
+                    <a class="nav-link fw-bold fs-4" href="admin.html">Admin</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- JavaScript -->
+    <script src="../js/adminCheck.js"></script>
+</body>
+</html>
