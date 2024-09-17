@@ -23,30 +23,27 @@ window.addEventListener('load', async () => {
     // Check if MetaMask is installed
     if (window.ethereum) {
         web3 = new Web3(window.ethereum);
-        document.getElementById('connectButton').addEventListener('click', connectMetaMask);
-        document.getElementById('buyTicketButton').addEventListener('click', buyTicket);
 
         // Load contract data (ABI and address) dynamically
         await loadContractData();
 
-        // Add event listeners to automatically focus on the next input box
-        addInputNavigation();
+        // Check MetaMask connection
+        const accounts = await ethereum.request({ method: 'eth_accounts' });
+        if (accounts.length === 0) {
+            // Redirect to account.html if not connected
+            window.location.href = 'account.html';
+        } else {
+            userAccount = accounts[0];
+            // Add event listeners to buttons
+            document.getElementById('buyTicketButton').addEventListener('click', buyTicket);
+            
+            // Add event listeners to automatically focus on the next input box
+            addInputNavigation();
+        }
     } else {
         alert('MetaMask not detected. Please install MetaMask to use this dApp.');
     }
 });
-
-async function connectMetaMask() {
-    try {
-        // Request account access
-        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-        userAccount = accounts[0];
-        document.getElementById('status').innerText = `Connected: ${userAccount}`;
-    } catch (error) {
-        console.error('Error connecting to MetaMask:', error);
-        document.getElementById('status').innerText = 'Failed to connect to MetaMask.';
-    }
-}
 
 async function buyTicket() {
     // Get the 4 digits from the input fields

@@ -1,5 +1,4 @@
 async function connect() {
-    // Check if MetaMask is installed
     if (typeof window.ethereum !== 'undefined') {
         console.log('MetaMask is available.');
 
@@ -25,15 +24,17 @@ async function connect() {
 // Function to handle the connected accounts and update the UI layout
 function handleAccountsChanged(accounts) {
     const cardContainer = document.querySelector('.card-container');
+    const dataElement = document.getElementById('data');
 
     if (accounts.length === 0) {
         // Display the connection button if no accounts are connected
-        cardContainer.innerHTML = `<div class="card text-center">
-            <h3 class="fw-bold fs-1">Connect to MetaMask</h3>
-            <p class="fs-3">Connect your MetaMask wallet to interact with WinChain Lottery</p>
-            <button id="connectButton" onclick="connect()" class="connect-button fs-4">Connect MetaMask</button>
-            <p id="data" class="wallet-status fs-5">Not connected</p>
-        </div>`;
+        cardContainer.innerHTML = `
+            <div class="card text-center">
+                <h3 class="fw-bold fs-1">Connect to MetaMask</h3>
+                <p class="fs-3">Connect your MetaMask wallet to interact with WinChain Lottery</p>
+                <button id="connectButton" onclick="connect()" class="connect-button fs-4">Connect MetaMask</button>
+                <p id="data" class="wallet-status fs-5">Not connected</p>
+            </div>`;
     } else {
         // Update the content to show the user icon, connected wallet, purchase history, and change wallet button
         cardContainer.innerHTML = `
@@ -72,11 +73,23 @@ function handleAccountsChanged(accounts) {
     }
 }
 
-// Function to switch the wallet by requesting MetaMask to change accounts
-function switchWallet() {
-    ethereum.request({ method: 'eth_requestAccounts' })
-        .then(handleAccountsChanged)
-        .catch((error) => {
-            console.error('Error switching wallet:', error);
-        });
+// Function to check MetaMask connection status and update the UI accordingly
+async function checkMetaMaskConnection() {
+    if (typeof window.ethereum !== 'undefined') {
+        try {
+            const accounts = await ethereum.request({ method: 'eth_accounts' });
+            handleAccountsChanged(accounts);
+        } catch (error) {
+            console.error('Error checking MetaMask connection:', error);
+        }
+    } else {
+        console.log('MetaMask is not installed.');
+        document.getElementById('data').innerHTML = `
+            <div class="info-message">
+                MetaMask is not installed. Please <a href="account.html">install MetaMask and connect your wallet</a>.
+            </div>`;
+    }
 }
+
+// Call the function on page load
+window.onload = checkMetaMaskConnection;
