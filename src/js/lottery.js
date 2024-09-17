@@ -1,19 +1,19 @@
-// Function to load contract data dynamically
+// Load contract data dynamically
 async function loadContractData() {
     try {
         const response = await fetch('LotteryDApp.json');
         const contractData = await response.json();
         const contractABI = contractData.abi;
-        const contractAddress = contractData.networks['5777'].address; // Replace '5777' with the correct network ID
+        const contractAddress = contractData.networks['5777'].address; // Replace '5777' with correct network ID
 
         // Initialize the contract
         lotteryContract = new web3.eth.Contract(contractABI, contractAddress);
         console.log('Contract loaded:', lotteryContract);
 
         // Fetch and update total participants, total pool, and draw info
-        updateTotalParticipants();
-        updateTotalPool();
-        updateDrawInfo();
+        await updateTotalParticipants();
+        await updateTotalPool();
+        await updateDrawInfo();
     } catch (error) {
         console.error('Failed to load contract data:', error);
         alert('Error loading contract ABI or address.');
@@ -155,7 +155,6 @@ async function cancelTicket() {
 
     try {
         await lotteryContract.methods.cancelTicket(ticketNumber).call({ from: userAccount });
-
         await lotteryContract.methods.cancelTicket(ticketNumber).send({ from: userAccount });
 
         alert('Ticket canceled successfully!');
@@ -167,34 +166,18 @@ async function cancelTicket() {
     clearInputFields();
 }
 
-// Function to clear all input fields
+// Helper function to clear input fields
 function clearInputFields() {
-    const inputs = document.querySelectorAll('.ticket-digit');
-    inputs.forEach(input => {
-        input.value = '';
-    });
+    document.querySelectorAll('.ticket-digit').forEach(input => input.value = '');
 }
 
-// Helper function to retrieve the ticket number from the input fields
+// Helper function to retrieve the ticket number
 function getTicketNumber() {
-    const digit1 = document.getElementById('digit1').value;
-    const digit2 = document.getElementById('digit2').value;
-    const digit3 = document.getElementById('digit3').value;
-    const digit4 = document.getElementById('digit4').value;
+    const digits = ['digit1', 'digit2', 'digit3', 'digit4'].map(id => document.getElementById(id).value);
+    if (digits.some(isNaN)) return alert('Please enter only numeric digits.');
 
-    if (isNaN(digit1) || isNaN(digit2) || isNaN(digit3) || isNaN(digit4)) {
-        alert('Please enter only numeric digits.');
-        return null;
-    }
-
-    const ticketNumber = parseInt(`${digit1}${digit2}${digit3}${digit4}`, 10);
-
-    if (!ticketNumber || ticketNumber.toString().length !== 4) {
-        alert('Please enter a valid 4-digit ticket number.');
-        return null;
-    }
-
-    return ticketNumber;
+    const ticketNumber = parseInt(digits.join(''), 10);
+    return ticketNumber.toString().length === 4 ? ticketNumber : null;
 }
 
 // Function to auto-move focus to the next input box
@@ -215,9 +198,7 @@ function addInputNavigation() {
     });
 }
 
-// Update draw info periodically
-setInterval(updateDrawInfo, 1000); // Update countdown every second
-
-// Optionally, you can also periodically update the total pool and participants
-setInterval(updateTotalPool, 60000); // Update every minute (adjust as needed)
-setInterval(updateTotalParticipants, 60000); // Update every minute (adjust as needed)
+// Update draw info, total pool, total participants periodically every 5 seconds
+setInterval(updateDrawInfo, 5000);
+setInterval(updateTotalPool, 5000);
+setInterval(updateTotalParticipants, 5000);
