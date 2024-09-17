@@ -25,10 +25,19 @@ contract("LotteryDApp", (accounts) => {
 
   it("should allow a user to purchase a ticket", async () => {
     await lottery.buyTicket(1234, { from: user1, value: web3.utils.toWei("1", "ether") });
-    const tickets = await lottery.userTickets(1, user1);  // Draw ID is 1 for the first draw
 
-    assert.equal(tickets.length, 1, "User should have one ticket");
-    assert.equal(tickets[0].toNumber(), 1234, "Ticket number should be 1234");
+    // Get the length of the user's tickets array
+    const ticketsLength = await lottery.getUserTicketCount(user1);  // Draw ID is 1 for the first draw
+
+    // Iterate through the array to get each ticket
+    let ticketNumbers = [];
+    for (let i = 0; i < ticketsLength.toNumber(); i++) {
+      const ticket = await lottery.userTickets(1, user1, i);  // drawId = 1, user = user1, index = i
+      ticketNumbers.push(ticket.toNumber());
+    }
+
+    assert.equal(ticketNumbers.length, 1, "User should have one ticket");
+    assert.equal(ticketNumbers[0], 1234, "Ticket number should be 1234");
   });
 
   it("should not allow a user to purchase more than 5 tickets", async () => {
@@ -36,7 +45,7 @@ contract("LotteryDApp", (accounts) => {
     for (let i = 0; i < 5; i++) {
       await lottery.buyTicket(i, { from: user1, value: web3.utils.toWei("1", "ether") });
     }
-    
+
     // Attempt to buy a 6th ticket
     await truffleAssert.reverts(
       lottery.buyTicket(1234, { from: user1, value: web3.utils.toWei("1", "ether") }),
@@ -50,10 +59,11 @@ contract("LotteryDApp", (accounts) => {
     const initialBalance = await web3.eth.getBalance(user1);
     
     await lottery.cancelTicket(4321, { from: user1 });
-    const ticketsAfterCancellation = await lottery.userTickets(1, user1); // Draw ID is 1
-    
-    assert.equal(ticketsAfterCancellation.length, 0, "Ticket should be canceled");
-    
+
+    // Get the updated length of the user's tickets array
+    const ticketsLength = await lottery.getUserTicketCount(user1);
+    assert.equal(ticketsLength.toNumber(), 0, "User should have no tickets after cancellation");
+
     const finalBalance = await web3.eth.getBalance(user1);
     const refund = web3.utils.toWei("0.9", "ether"); // 90% refund
     assert(finalBalance > initialBalance - refund, "User should receive 90% refund");
