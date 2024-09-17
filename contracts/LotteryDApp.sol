@@ -228,6 +228,11 @@ contract LotteryDApp {
         return prizePoolAfterFee;
     }
 
+    // Function to get the next draw time
+    function getNextDrawTime() public view returns (uint256) {
+        return lastDrawTime + drawInterval;
+    }
+
     // Helper function to check if there are winners for any of the three prize numbers
     function _hasWinners(uint256 prizeNumber1, uint256 prizeNumber2, uint256 prizeNumber3) private view returns (bool) {
         return (

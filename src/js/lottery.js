@@ -1,4 +1,4 @@
-// Fetch ABI and Contract Address dynamically from LotteryDApp.json
+// Function to load contract data dynamically
 async function loadContractData() {
     try {
         const response = await fetch('LotteryDApp.json');
@@ -10,9 +10,10 @@ async function loadContractData() {
         lotteryContract = new web3.eth.Contract(contractABI, contractAddress);
         console.log('Contract loaded:', lotteryContract);
 
-        // Fetch and update total participants and total pool
+        // Fetch and update total participants, total pool, and draw info
         updateTotalParticipants();
         updateTotalPool();
+        updateDrawInfo();
     } catch (error) {
         console.error('Failed to load contract data:', error);
         alert('Error loading contract ABI or address.');
@@ -32,7 +33,6 @@ async function updateTotalParticipants() {
 async function updateTotalPool() {
     try {
         const totalPool = await lotteryContract.methods.getPrizePoolAfterFee().call();
-        // Convert from Wei to Ether (or any other unit your contract uses)
         const totalPoolInEther = web3.utils.fromWei(totalPool, 'ether');
         document.getElementById('totalPool').innerText = `${totalPoolInEther} ETH`;
     } catch (error) {
@@ -41,9 +41,43 @@ async function updateTotalPool() {
     }
 }
 
+// Function to update draw info (time until draw)
+async function updateDrawInfo() {
+    try {
+        // Fetch the next draw time from the contract
+        const nextDrawTime = BigInt(await lotteryContract.methods.getNextDrawTime().call());
+        const currentTime = BigInt(Math.floor(Date.now() / 1000)); // Convert current time to BigInt
 
+        // Calculate remaining time
+        const remainingTime = nextDrawTime - currentTime;
+
+        // Check if the remaining time is positive
+        if (remainingTime > BigInt(0)) {
+            // Calculate hours, minutes, and seconds
+            const hours = Number(remainingTime / BigInt(3600));
+            const minutes = Number((remainingTime % BigInt(3600)) / BigInt(60));
+            const seconds = Number(remainingTime % BigInt(60));
+
+            // Update the HTML elements
+            document.getElementById('hours').innerText = hours;
+            document.getElementById('minutes').innerText = minutes;
+            document.getElementById('seconds').innerText = seconds;
+        } else {
+            // Time is up or invalid, update accordingly
+            document.getElementById('hours').innerText = '0';
+            document.getElementById('minutes').innerText = '0';
+            document.getElementById('seconds').innerText = '0';
+        }
+    } catch (error) {
+        console.error('Error fetching draw info:', error);
+        document.getElementById('hours').innerText = 'Error';
+        document.getElementById('minutes').innerText = 'Error';
+        document.getElementById('seconds').innerText = 'Error';
+    }
+}
+
+// Initial load of data
 window.addEventListener('load', async () => {
-    // Check if MetaMask is installed
     if (window.ethereum) {
         web3 = new Web3(window.ethereum);
 
@@ -53,14 +87,13 @@ window.addEventListener('load', async () => {
         // Check MetaMask connection
         const accounts = await ethereum.request({ method: 'eth_accounts' });
         if (accounts.length === 0) {
-            // Show the prompt if not connected
             document.getElementById('connectPrompt').style.display = 'block';
             document.getElementById('ticketSection').style.display = 'none';
         } else {
             userAccount = accounts[0];
-            // Show the ticket section if connected
             document.getElementById('connectPrompt').style.display = 'none';
             document.getElementById('ticketSection').style.display = 'block';
+
             // Add event listeners to buttons
             document.getElementById('buyTicketButton').addEventListener('click', buyTicket);
             document.getElementById('cancelTicketButton').addEventListener('click', cancelTicket);
@@ -73,8 +106,8 @@ window.addEventListener('load', async () => {
     }
 });
 
+// Function to buy a ticket
 async function buyTicket() {
-    // Get the 4 digits from the input fields
     const ticketNumber = getTicketNumber();
 
     if (!ticketNumber) return;
@@ -85,40 +118,29 @@ async function buyTicket() {
     }
 
     try {
-        // Use call() to check for any errors before msg.value check
         await lotteryContract.methods.buyTicket(ticketNumber).call({ from: userAccount });
 
+        try {
+            const ticketPrice = await lotteryContract.methods.ticketPrice().call();
+            await lotteryContract.methods.buyTicket(ticketNumber).send({
+                from: userAccount,
+                value: ticketPrice
+            });
+
+            alert('Ticket purchased successfully!');
+        } catch (sendError) {
+            alert(`Transaction failed during send: ${sendError.message}`);
+        }
     } catch (error) {
         let errorMessage = error.data.message.split(" revert ")[1];
-
-        // Check if the error is due to incorrect ticket price
-        if (errorMessage === "Incorrect ticket price") {
-            try {
-                // Fetch the current ticket price dynamically from the contract
-                const ticketPrice = await lotteryContract.methods.ticketPrice().call();
-
-                // Send the transaction with the correct Ether amount
-                await lotteryContract.methods.buyTicket(ticketNumber).send({
-                    from: userAccount,
-                    value: ticketPrice
-                });
-
-                alert('Ticket purchased successfully!');
-            } catch (sendError) {
-                alert(`Transaction failed during send: ${sendError.message}`);
-            }
-        } else {
-            // If it's a different error, display the error message
-            alert(`Error: ${errorMessage}`);
-        }
+        alert(`Error: ${errorMessage}`);
     }
 
-    // Clear the input fields
     clearInputFields();
 }
 
+// Function to cancel a ticket
 async function cancelTicket() {
-    // Get the 4 digits from the input fields
     const ticketNumber = getTicketNumber();
 
     if (!ticketNumber) return;
@@ -131,17 +153,14 @@ async function cancelTicket() {
     try {
         await lotteryContract.methods.cancelTicket(ticketNumber).call({ from: userAccount });
 
-        // If call() succeeds, proceed to send the transaction
         await lotteryContract.methods.cancelTicket(ticketNumber).send({ from: userAccount });
 
         alert('Ticket canceled successfully!');
     } catch (error) {
         let errorMessage = error.data.message.split(" revert ")[1];
-
         alert(`Error: ${errorMessage}`);
     }
 
-    // Clear the input fields
     clearInputFields();
 }
 
@@ -149,7 +168,7 @@ async function cancelTicket() {
 function clearInputFields() {
     const inputs = document.querySelectorAll('.ticket-digit');
     inputs.forEach(input => {
-        input.value = ''; // Clear each input field
+        input.value = '';
     });
 }
 
@@ -160,13 +179,11 @@ function getTicketNumber() {
     const digit3 = document.getElementById('digit3').value;
     const digit4 = document.getElementById('digit4').value;
 
-    // Validate that the inputs are all numbers
     if (isNaN(digit1) || isNaN(digit2) || isNaN(digit3) || isNaN(digit4)) {
         alert('Please enter only numeric digits.');
         return null;
     }
 
-    // Convert to a uint256 number
     const ticketNumber = parseInt(`${digit1}${digit2}${digit3}${digit4}`, 10);
 
     if (!ticketNumber || ticketNumber.toString().length !== 4) {
@@ -183,14 +200,21 @@ function addInputNavigation() {
     inputs.forEach((input, index) => {
         input.addEventListener('input', () => {
             if (input.value.length === 1 && index < inputs.length - 1) {
-                inputs[index + 1].focus(); // Move to next input
+                inputs[index + 1].focus();
             }
         });
 
         input.addEventListener('keydown', (event) => {
             if (event.key === 'Backspace' && input.value.length === 0 && index > 0) {
-                inputs[index - 1].focus(); // Move to previous input on backspace
+                inputs[index - 1].focus();
             }
         });
     });
 }
+
+// Update draw info periodically
+setInterval(updateDrawInfo, 1000); // Update countdown every second
+
+// Optionally, you can also periodically update the total pool and participants
+setInterval(updateTotalPool, 60000); // Update every minute (adjust as needed)
+setInterval(updateTotalParticipants, 60000); // Update every minute (adjust as needed)
