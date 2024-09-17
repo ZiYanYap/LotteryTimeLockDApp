@@ -26,6 +26,12 @@
         #buyTicketButton {
             margin-top: 15px;
         }
+
+        #connectPrompt {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+        }
     </style>
 
     <script>
@@ -36,17 +42,35 @@
                 const accounts = await ethereum.request({ method: 'eth_accounts' });
 
                 if (accounts.length === 0) {
-                    // If not connected, redirect to account.html
-                    window.location.href = 'account.html';
+                    // If not connected, show the connect prompt
+                    document.getElementById('connectPrompt').style.display = 'block';
+                } else {
+                    // User is connected, hide the prompt and show the ticket purchase section
+                    document.getElementById('connectPrompt').style.display = 'none';
+                    document.getElementById('ticketSection').style.display = 'block';
                 }
             } else {
                 // MetaMask is not installed
-                window.location.href = 'account.html';
+                document.getElementById('connectPrompt').innerHTML = `
+                    <p class="alert alert-warning">MetaMask is not installed. Please <a href="account.html">install MetaMask</a> and connect your wallet.</p>
+                `;
+                document.getElementById('connectPrompt').style.display = 'block';
             }
         }
 
         // Call the function on page load
         window.onload = checkMetaMaskConnection;
+
+        // Function to connect MetaMask
+        async function connectMetaMask() {
+            try {
+                const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
+                // Update the UI once the account is connected
+                checkMetaMaskConnection();
+            } catch (error) {
+                console.error('Error connecting MetaMask:', error);
+            }
+        }
     </script>
 </head>
 
@@ -55,8 +79,14 @@
     <div id="navbar-placeholder"></div>
 
     <div class="flex-fill">
+        <!-- Connect Prompt -->
+        <div id="connectPrompt" class="alert alert-warning">
+            <p>Please connect your MetaMask wallet to interact with the lottery.</p>
+            <button onclick="connectMetaMask()" class="btn btn-primary">Connect MetaMask</button>
+        </div>
+
         <!-- Ticket number input -->
-        <div>
+        <div id="ticketSection" style="display: none;">
             <input type="text" id="digit1" maxlength="1" class="ticket-digit" pattern="\d*">
             <input type="text" id="digit2" maxlength="1" class="ticket-digit" pattern="\d*">
             <input type="text" id="digit3" maxlength="1" class="ticket-digit" pattern="\d*">

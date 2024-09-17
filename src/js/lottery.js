@@ -30,10 +30,14 @@ window.addEventListener('load', async () => {
         // Check MetaMask connection
         const accounts = await ethereum.request({ method: 'eth_accounts' });
         if (accounts.length === 0) {
-            // Redirect to account.html if not connected
-            window.location.href = 'account.html';
+            // Show the prompt if not connected
+            document.getElementById('connectPrompt').style.display = 'block';
+            document.getElementById('ticketSection').style.display = 'none';
         } else {
             userAccount = accounts[0];
+            // Show the ticket section if connected
+            document.getElementById('connectPrompt').style.display = 'none';
+            document.getElementById('ticketSection').style.display = 'block';
             // Add event listeners to buttons
             document.getElementById('buyTicketButton').addEventListener('click', buyTicket);
             

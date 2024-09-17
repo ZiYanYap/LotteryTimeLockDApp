@@ -3,7 +3,6 @@ async function connect() {
         console.log('MetaMask is available.');
 
         try {
-            // Request account access
             const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
             handleAccountsChanged(accounts);
         } catch (error) {
@@ -13,21 +12,17 @@ async function connect() {
                 console.error('Error connecting to MetaMask:', error);
             }
         }
-
-        // Handle account changes after connection
-        ethereum.on('accountsChanged', handleAccountsChanged);
     } else {
         console.log('MetaMask is not installed. Please install MetaMask.');
     }
 }
 
-// Function to handle the connected accounts and update the UI layout
 function handleAccountsChanged(accounts) {
     const cardContainer = document.querySelector('.card-container');
     const dataElement = document.getElementById('data');
 
     if (accounts.length === 0) {
-        // Display the connection button if no accounts are connected
+        localStorage.setItem('metaMaskConnected', 'false');
         cardContainer.innerHTML = `
             <div class="card text-center">
                 <h3 class="fw-bold fs-1">Connect to MetaMask</h3>
@@ -36,7 +31,7 @@ function handleAccountsChanged(accounts) {
                 <p id="data" class="wallet-status fs-5">Not connected</p>
             </div>`;
     } else {
-        // Update the content to show the user icon, connected wallet, purchase history, and change wallet button
+        localStorage.setItem('metaMaskConnected', 'true');
         cardContainer.innerHTML = `
             <div class="card text-center">
                 <div class="fs-2">
@@ -54,7 +49,6 @@ function handleAccountsChanged(accounts) {
                         </tr>
                     </thead>
                     <tbody id="purchaseHistory">
-                        <!-- Example placeholder rows with date and time -->
                         <tr>
                             <th scope="row">1</th>
                             <td>Lottery Ticket #1</td>
@@ -73,7 +67,6 @@ function handleAccountsChanged(accounts) {
     }
 }
 
-// Function to check MetaMask connection status and update the UI accordingly
 async function checkMetaMaskConnection() {
     if (typeof window.ethereum !== 'undefined') {
         try {
@@ -83,7 +76,7 @@ async function checkMetaMaskConnection() {
             console.error('Error checking MetaMask connection:', error);
         }
     } else {
-        console.log('MetaMask is not installed.');
+        localStorage.setItem('metaMaskConnected', 'false');
         document.getElementById('data').innerHTML = `
             <div class="info-message">
                 MetaMask is not installed. Please <a href="account.html">install MetaMask and connect your wallet</a>.
@@ -91,5 +84,4 @@ async function checkMetaMaskConnection() {
     }
 }
 
-// Call the function on page load
 window.onload = checkMetaMaskConnection;
