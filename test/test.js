@@ -13,6 +13,29 @@ contract("LotteryDApp", (accounts) => {
     lottery = await LotteryDApp.new(firstDrawTime, { from: developer });
   });
 
+  // Helper function to increase time
+  function increaseTime(duration) {
+    return new Promise((resolve, reject) => {
+      web3.currentProvider.send(
+        {
+          jsonrpc: "2.0",
+          method: "evm_increaseTime",
+          params: [duration], // Increase time by `duration` seconds
+        },
+        (err, result) => {
+          if (err) { return reject(err); }
+          web3.currentProvider.send(
+            {
+              jsonrpc: "2.0",
+              method: "evm_mine", // Mine a new block after the time change
+            },
+            (err2, res2) => (err2 ? reject(err2) : resolve(res2))
+          );
+        }
+      );
+    });
+  }
+
   it("should deploy with correct initial values", async () => {
     const drawId = await lottery.drawId();
     const ticketPrice = await lottery.ticketPrice();
@@ -84,7 +107,11 @@ contract("LotteryDApp", (accounts) => {
     await lottery.buyTicket(1000, { from: user1, value: web3.utils.toWei("1", "ether") });
     await lottery.buyTicket(2000, { from: user2, value: web3.utils.toWei("1", "ether") });
 
-    // Only two participants, so draw should not be executable
+    // Not enough participants (only 2 participants)
+    // Advance time to meet the draw interval requirement
+    await increaseTime(660); // Simulate 11 minutes passing
+
+    // Now try to execute the draw with only 2 participants
     await truffleAssert.reverts(
       lottery.executeDraw({ from: developer }),
       "Not enough participants to execute the draw"
@@ -93,7 +120,7 @@ contract("LotteryDApp", (accounts) => {
     // Add a third participant
     await lottery.buyTicket(3000, { from: accounts[3], value: web3.utils.toWei("1", "ether") });
 
-    // Now the draw can be executed
+    // Now the draw should execute successfully
     await lottery.executeDraw({ from: developer });
   });
 });
