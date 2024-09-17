@@ -56,12 +56,14 @@ async function buyTicket() {
     const digit3 = document.getElementById('digit3').value;
     const digit4 = document.getElementById('digit4').value;
 
-    const ticketNumber = `${digit1}${digit2}${digit3}${digit4}`;
-
-    if (!digit1 || !digit2 || !digit3 || !digit4) {
-        alert('Please enter a 4-digit ticket number.');
+    // Validate that the inputs are all numbers
+    if (isNaN(digit1) || isNaN(digit2) || isNaN(digit3) || isNaN(digit4)) {
+        alert('Please enter only numeric digits.');
         return;
     }
+
+    // Convert to a uint256 number
+    const ticketNumber = parseInt(`${digit1}${digit2}${digit3}${digit4}`, 10);
 
     if (!userAccount) {
         alert('Please connect your MetaMask account first.');
@@ -69,15 +71,31 @@ async function buyTicket() {
     }
 
     try {
-        // Buying ticket
-        await lotteryContract.methods.buyTicket(ticketNumber).send({
-            from: userAccount,
-            value: web3.utils.toWei('1', 'ether') // Adjust ticket price as necessary
-        });
-        alert('Ticket purchased successfully!');
+        // Use call() to check for any errors before msg.value check
+        await lotteryContract.methods.buyTicket(ticketNumber).call({ from: userAccount });
+        
     } catch (error) {
-        console.error('Error buying ticket:', error);
-        alert('An error occurred while purchasing the ticket.');
+        let errorMessage = error.data.message.split(" revert ")[1];
+
+        console.log(errorMessage);
+
+        // Check if the error is due to incorrect ticket price
+        if (errorMessage === "Incorrect ticket price") {
+            try {
+                // Send the transaction with the correct Ether amount
+                await lotteryContract.methods.buyTicket(ticketNumber).send({
+                    from: userAccount,
+                    value: web3.utils.toWei('1', 'ether') // Adjust ticket price as necessary
+                });
+
+                alert('Ticket purchased successfully!');
+            } catch (sendError) {
+                alert(`Transaction failed during send: ${sendError.message}`);
+            }
+        } else {
+            // If it's a different error, display the error message
+            alert(`Error: ${errorMessage}`);
+        }
     }
 }
 

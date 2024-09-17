@@ -89,10 +89,10 @@ contract LotteryDApp {
     // Function to buy a ticket
     function buyTicket(uint256 ticketNumber) external payable {
         require(block.timestamp < salesCloseTime, "Sales have closed for this draw");
-        require(msg.value == ticketPrice, "Incorrect ticket price");
         require(userTickets[drawId][msg.sender].length < 5, "Ticket purchase limit reached");
         require(ticketNumber >= 0 && ticketNumber <= 9999, "Ticket number must be a 4-digit number");
         require(!_hasUserPurchasedTicket(msg.sender, ticketNumber), "You have already purchased this ticket number.");
+        require(msg.value == ticketPrice, "Incorrect ticket price");
 
         // Add the ticket to the user's tickets and ticketOwners
         userTickets[drawId][msg.sender].push(ticketNumber);
