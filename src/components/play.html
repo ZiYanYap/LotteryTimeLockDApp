@@ -16,29 +16,6 @@
     <!-- Our CSS -->
     <link rel="stylesheet" href="../css/style.css" />
 
-    <style>
-        .ticket-digit {
-            width: 50px;
-            text-align: center;
-            margin: 5px;
-        }
-
-        #buyTicketButton {
-            margin-top: 15px;
-        }
-
-        #cancelTicketButton {
-            margin-top: 15px;
-            margin-left: 10px;
-        }
-
-        #connectPrompt {
-            display: none;
-            text-align: center;
-            margin-top: 20px;
-        }
-    </style>
-
     <script>
         // Function to check MetaMask connection status
         async function checkMetaMaskConnection() {
@@ -76,41 +53,108 @@
                 console.error('Error connecting MetaMask:', error);
             }
         }
+
+        // Function to update the countdown timer
+        function updateCountdown() {
+            const endTime = new Date("2024-12-31T23:59:59"); // Set this to your draw end time
+            const now = new Date();
+            const timeRemaining = endTime - now;
+            const days = Math.floor(timeRemaining / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((timeRemaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((timeRemaining % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((timeRemaining % (1000 * 60)) / 1000);
+
+            document.getElementById('countdown').innerHTML = `
+                <p>${days}d ${hours}h ${minutes}m ${seconds}s</p>
+            `;
+        }
+
+        // Call the countdown function every second
+        setInterval(updateCountdown, 1000);
     </script>
 </head>
 
-<body class="d-flex flex-column min-vh-100">
+<body class="d-flex flex-column min-vh-100 bg-dark text-light">
+
     <!-- Navbar -->
     <div id="navbar-placeholder"></div>
 
-    <div class="flex-fill">
-        <!-- Connect Prompt -->
-        <div id="connectPrompt" class="alert alert-warning">
-            <p>Please connect your MetaMask wallet to interact with the lottery.</p>
-            <button onclick="connectMetaMask()" class="btn btn-primary">Connect MetaMask</button>
-        </div>
+    <!-- Main Content -->
+    <main class="flex-fill d-flex justify-content-center align-items-center">
+        <div class="container text-center">
+            <!-- Connect Prompt -->
+            <div id="connectPrompt" class="alert alert-warning mx-auto" style="display: none;">
+                <p>Please connect your MetaMask wallet to interact with the lottery.</p>
+                <button onclick="connectMetaMask()" class="btn btn-primary btn-lg">Connect MetaMask</button>
+            </div>
 
-        <!-- Ticket number input and buttons -->
-        <div id="ticketSection" style="display: none;">
-            <input type="text" id="digit1" maxlength="1" class="ticket-digit" pattern="\d*">
-            <input type="text" id="digit2" maxlength="1" class="ticket-digit" pattern="\d*">
-            <input type="text" id="digit3" maxlength="1" class="ticket-digit" pattern="\d*">
-            <input type="text" id="digit4" maxlength="1" class="ticket-digit" pattern="\d*">
-            <br>
-            <!-- Buy Ticket Button -->
-            <button id="buyTicketButton" class="btn btn-success">Buy Ticket</button>
+            <!-- Upcoming Draw Information -->
+            <div id="drawInfo" class="mb-4 text-center">
+                <h3 class="mb-3">The Upcoming Draw</h3>
+                <div class="row justify-content-center">
+                    <div class="col-12 mb-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="p-3 bg-secondary rounded">
+                                <strong>Total Pool</strong>
+                                <p id="totalPool">0.0 MATIC</p>
+                            </div>
+                            <div class="p-3 bg-secondary rounded">
+                                <strong>Participants</strong>
+                                <p id="totalParticipants">100</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <h4>Time until draw</h4>
+                        <div class="d-flex justify-content-center">
+                            <div class="p-3 bg-dark text-light rounded mx-2">
+                                <span id="hours">0</span>
+                                <p>HOURS</p>
+                            </div>
+                            <div class="p-3 bg-dark text-light rounded mx-2">
+                                <span id="minutes">27</span>
+                                <p>MINUTES</p>
+                            </div>
+                            <div class="p-3 bg-dark text-light rounded mx-2">
+                                <span id="seconds">34</span>
+                                <p>SECONDS</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-            <!-- Cancel Ticket Button -->
-            <button id="cancelTicketButton" class="btn btn-danger">Cancel Ticket</button>
+            <!-- Ticket number input and buttons -->
+            <div id="ticketSection" class="text-center" style="display: none;">
+                <div class="row justify-content-center mb-3">
+                    <div class="col-auto">
+                        <input type="text" id="digit1" maxlength="1" class="form-control ticket-digit" pattern="\d*">
+                    </div>
+                    <div class="col-auto">
+                        <input type="text" id="digit2" maxlength="1" class="form-control ticket-digit" pattern="\d*">
+                    </div>
+                    <div class="col-auto">
+                        <input type="text" id="digit3" maxlength="1" class="form-control ticket-digit" pattern="\d*">
+                    </div>
+                    <div class="col-auto">
+                        <input type="text" id="digit4" maxlength="1" class="form-control ticket-digit" pattern="\d*">
+                    </div>
+                </div>
+                <!-- Buy Ticket Button -->
+                <button id="buyTicketButton" class="btn btn-success btn-lg me-2">Buy Ticket</button>
+
+                <!-- Cancel Ticket Button -->
+                <button id="cancelTicketButton" class="btn btn-danger btn-lg">Cancel Ticket</button>
+            </div>
         </div>
-    </div>
+    </main>
 
     <!-- Footer -->
     <div id="footer-placeholder"></div>
+
     <script src="../js/adminCheck.js"></script>
     <script src="../js/callNavFooter.js"></script>
     <script src="../js/lottery.js"></script>
-
 </body>
 
 </html>

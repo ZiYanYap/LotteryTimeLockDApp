@@ -202,3 +202,16 @@ button,
     color: #FFFFFF;
     /* White text */
 }
+
+.ticket-digit {
+    width: 10rem;
+    height: 10rem;
+    font-size: 8rem;
+    text-align: center;
+}
+
+#connectPrompt {
+    display: none;
+    text-align: center;
+    margin-top: 5rem;
+}
