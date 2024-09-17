@@ -1,7 +1,40 @@
+let web3;
+let isWeb3Initialized = false;
+
+async function initWeb3() {
+    if (typeof window.ethereum !== 'undefined' && !isWeb3Initialized) {
+        web3 = new Web3(window.ethereum);
+        console.log('Web3 initialized.');
+        await loadContractData();
+        isWeb3Initialized = true; // Set to true once initialized
+    } else if (isWeb3Initialized) {
+        console.log('Web3 is already initialized.');
+    } else {
+        console.log('MetaMask is not installed.');
+    }
+}
+
+async function loadContractData() {
+    try {
+        const response = await fetch('LotteryDApp.json');
+        const contractData = await response.json();
+        const contractABI = contractData.abi;
+        const contractAddress = contractData.networks['5777'].address; // Replace '5777' with the correct network ID
+
+        // Initialize the contract
+        lotteryContract = new web3.eth.Contract(contractABI, contractAddress);
+        console.log('Contract loaded:', lotteryContract);
+
+        // Initialize event listeners after loading the contract
+        await initializeEventListeners();
+    } catch (error) {
+        console.error('Failed to load contract data:', error);
+        alert('Error loading contract ABI or address.');
+    }
+}
+
 async function connect() {
     if (typeof window.ethereum !== 'undefined') {
-        console.log('MetaMask is available.');
-
         try {
             const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
             handleAccountsChanged(accounts);
@@ -42,34 +75,82 @@ function handleAccountsChanged(accounts) {
                 <table class="table table-striped">
                     <thead>
                         <tr>
-                            <th scope="col">#</th>
-                            <th scope="col">Product</th>
-                            <th scope="col">Amount</th>
+                            <th scope="col">Ticket Number</th>
+                            <th scope="col">Action</th>
                             <th scope="col">Date & Time</th>
                         </tr>
                     </thead>
                     <tbody id="purchaseHistory">
-                        <tr>
-                            <th scope="row">1</th>
-                            <td>Lottery Ticket #1</td>
-                            <td>0.01 ETH</td>
-                            <td>2024-09-12 14:35:21</td>
-                        </tr>
-                        <tr>
-                            <th scope="row">2</th>
-                            <td>Lottery Ticket #2</td>
-                            <td>0.02 ETH</td>
-                            <td>2024-09-15 09:12:45</td>
-                        </tr>
+                        <!-- Purchase history will be dynamically inserted here -->
                     </tbody>
                 </table>
             </div>`;
+
+        // Initialize event listeners after connecting
+        initializeEventListeners();
     }
+}
+
+let eventListenersInitialized = false;
+
+async function initializeEventListeners() {
+    if (!lotteryContract) {
+        console.error('Contract is not initialized.');
+        return;
+    }
+
+    if (eventListenersInitialized) {
+        console.log('Event listeners already initialized.');
+        return;
+    }
+
+    eventListenersInitialized = true;
+
+    // Listen for TicketPurchased event
+    lotteryContract.events.TicketPurchased({
+        filter: { buyer: web3.eth.defaultAccount },
+        fromBlock: 'latest'
+    })
+    .on('data', (event) => {
+        console.log('TicketPurchased event:', event);
+        updatePurchaseHistory(event.returnValues, 'Purchased');
+    })
+    .on('error', (error) => {
+        console.error('Error listening to TicketPurchased event:', error);
+    });
+
+    // Listen for TicketCancelled event
+    lotteryContract.events.TicketCancelled({
+        filter: { user: web3.eth.defaultAccount },
+        fromBlock: 'latest'
+    })
+    .on('data', (event) => {
+        console.log('TicketCancelled event:', event);
+        updatePurchaseHistory(event.returnValues, 'Cancelled');
+    })
+    .on('error', (error) => {
+        console.error('Error listening to TicketCancelled event:', error);
+    });
+}
+
+function updatePurchaseHistory(eventData, eventType) {
+    const purchaseHistoryElement = document.getElementById('purchaseHistory');
+    const newRow = document.createElement('tr');
+
+    const rowContent = `
+        <th scope="row">${eventData.ticketNumber}</th>
+        <td>${eventType}</td>
+        <td>${new Date().toLocaleString()}</td>
+    `;
+
+    newRow.innerHTML = rowContent;
+    purchaseHistoryElement.appendChild(newRow);
 }
 
 async function checkMetaMaskConnection() {
     if (typeof window.ethereum !== 'undefined') {
         try {
+            await initWeb3();
             const accounts = await ethereum.request({ method: 'eth_accounts' });
             handleAccountsChanged(accounts);
         } catch (error) {

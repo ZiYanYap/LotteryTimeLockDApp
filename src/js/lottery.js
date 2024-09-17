@@ -1,7 +1,3 @@
-let web3;
-let lotteryContract;
-let userAccount;
-
 // Fetch ABI and Contract Address dynamically from LotteryDApp.json
 async function loadContractData() {
     try {
