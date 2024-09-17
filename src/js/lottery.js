@@ -129,7 +129,6 @@ async function cancelTicket() {
     }
 
     try {
-        // Use call() to check for any errors before sending the transaction
         await lotteryContract.methods.cancelTicket(ticketNumber).call({ from: userAccount });
 
         // If call() succeeds, proceed to send the transaction
@@ -139,13 +138,7 @@ async function cancelTicket() {
     } catch (error) {
         let errorMessage = error.data.message.split(" revert ")[1];
 
-        // Handle specific error messages, if known
-        if (errorMessage === "Ticket does not exist" || errorMessage === "Ticket not owned by user") {
-            alert(`Error: ${errorMessage}`);
-        } else {
-            // If it's a different error, display the error message
-            alert(`Error: ${errorMessage}`);
-        }
+        alert(`Error: ${errorMessage}`);
     }
 
     // Clear the input fields
