@@ -220,6 +220,14 @@ contract LotteryDApp {
         _distributePrizeTier(thirdPrizeNumber, thirdPrizeAmount, 3);
     }
 
+    // Public function to get the prize pool after fee
+    function getPrizePoolAfterFee() public view returns (uint256) {
+        uint256 contractBalance = address(this).balance;
+        uint256 developerFee = (contractBalance * developerFeePercentage) / 100;
+        uint256 prizePoolAfterFee = contractBalance - developerFee;
+        return prizePoolAfterFee;
+    }
+
     // Helper function to check if there are winners for any of the three prize numbers
     function _hasWinners(uint256 prizeNumber1, uint256 prizeNumber2, uint256 prizeNumber3) private view returns (bool) {
         return (

@@ -9,11 +9,38 @@ async function loadContractData() {
         // Initialize the contract
         lotteryContract = new web3.eth.Contract(contractABI, contractAddress);
         console.log('Contract loaded:', lotteryContract);
+
+        // Fetch and update total participants and total pool
+        updateTotalParticipants();
+        updateTotalPool();
     } catch (error) {
         console.error('Failed to load contract data:', error);
         alert('Error loading contract ABI or address.');
     }
 }
+
+async function updateTotalParticipants() {
+    try {
+        const totalParticipants = await lotteryContract.methods.uniqueParticipantsCount().call();
+        document.getElementById('totalParticipants').innerText = totalParticipants;
+    } catch (error) {
+        console.error('Error fetching total participants:', error);
+        document.getElementById('totalParticipants').innerText = 'Error';
+    }
+}
+
+async function updateTotalPool() {
+    try {
+        const totalPool = await lotteryContract.methods.getPrizePoolAfterFee().call();
+        // Convert from Wei to Ether (or any other unit your contract uses)
+        const totalPoolInEther = web3.utils.fromWei(totalPool, 'ether');
+        document.getElementById('totalPool').innerText = `${totalPoolInEther} ETH`;
+    } catch (error) {
+        console.error('Error fetching total pool:', error);
+        document.getElementById('totalPool').innerText = 'Error';
+    }
+}
+
 
 window.addEventListener('load', async () => {
     // Check if MetaMask is installed
@@ -37,7 +64,7 @@ window.addEventListener('load', async () => {
             // Add event listeners to buttons
             document.getElementById('buyTicketButton').addEventListener('click', buyTicket);
             document.getElementById('cancelTicketButton').addEventListener('click', cancelTicket);
-            
+
             // Add event listeners to automatically focus on the next input box
             addInputNavigation();
         }
@@ -60,7 +87,7 @@ async function buyTicket() {
     try {
         // Use call() to check for any errors before msg.value check
         await lotteryContract.methods.buyTicket(ticketNumber).call({ from: userAccount });
-        
+
     } catch (error) {
         let errorMessage = error.data.message.split(" revert ")[1];
 
@@ -104,10 +131,10 @@ async function cancelTicket() {
     try {
         // Use call() to check for any errors before sending the transaction
         await lotteryContract.methods.cancelTicket(ticketNumber).call({ from: userAccount });
-        
+
         // If call() succeeds, proceed to send the transaction
         await lotteryContract.methods.cancelTicket(ticketNumber).send({ from: userAccount });
-        
+
         alert('Ticket canceled successfully!');
     } catch (error) {
         let errorMessage = error.data.message.split(" revert ")[1];

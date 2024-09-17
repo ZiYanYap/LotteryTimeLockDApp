@@ -53,28 +53,10 @@
                 console.error('Error connecting MetaMask:', error);
             }
         }
-
-        // Function to update the countdown timer
-        function updateCountdown() {
-            const endTime = new Date("2024-12-31T23:59:59"); // Set this to your draw end time
-            const now = new Date();
-            const timeRemaining = endTime - now;
-            const days = Math.floor(timeRemaining / (1000 * 60 * 60 * 24));
-            const hours = Math.floor((timeRemaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-            const minutes = Math.floor((timeRemaining % (1000 * 60 * 60)) / (1000 * 60));
-            const seconds = Math.floor((timeRemaining % (1000 * 60)) / 1000);
-
-            document.getElementById('countdown').innerHTML = `
-                <p>${days}d ${hours}h ${minutes}m ${seconds}s</p>
-            `;
-        }
-
-        // Call the countdown function every second
-        setInterval(updateCountdown, 1000);
     </script>
 </head>
 
-<body class="d-flex flex-column min-vh-100 bg-dark text-light">
+<body class="d-flex flex-column min-vh-100">
 
     <!-- Navbar -->
     <div id="navbar-placeholder"></div>
@@ -123,6 +105,7 @@
                     </div>
                 </div>
             </div>
+
 
             <!-- Ticket number input and buttons -->
             <div id="ticketSection" class="text-center" style="display: none;">
