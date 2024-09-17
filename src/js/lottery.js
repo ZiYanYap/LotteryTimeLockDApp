@@ -40,6 +40,7 @@ window.addEventListener('load', async () => {
             document.getElementById('ticketSection').style.display = 'block';
             // Add event listeners to buttons
             document.getElementById('buyTicketButton').addEventListener('click', buyTicket);
+            document.getElementById('cancelTicketButton').addEventListener('click', cancelTicket);
             
             // Add event listeners to automatically focus on the next input box
             addInputNavigation();
@@ -51,19 +52,9 @@ window.addEventListener('load', async () => {
 
 async function buyTicket() {
     // Get the 4 digits from the input fields
-    const digit1 = document.getElementById('digit1').value;
-    const digit2 = document.getElementById('digit2').value;
-    const digit3 = document.getElementById('digit3').value;
-    const digit4 = document.getElementById('digit4').value;
+    const ticketNumber = getTicketNumber();
 
-    // Validate that the inputs are all numbers
-    if (isNaN(digit1) || isNaN(digit2) || isNaN(digit3) || isNaN(digit4)) {
-        alert('Please enter only numeric digits.');
-        return;
-    }
-
-    // Convert to a uint256 number
-    const ticketNumber = parseInt(`${digit1}${digit2}${digit3}${digit4}`, 10);
+    if (!ticketNumber) return;
 
     if (!userAccount) {
         alert('Please connect your MetaMask account first.');
@@ -98,6 +89,76 @@ async function buyTicket() {
             alert(`Error: ${errorMessage}`);
         }
     }
+
+    // Clear the input fields
+    clearInputFields();
+}
+
+async function cancelTicket() {
+    // Get the 4 digits from the input fields
+    const ticketNumber = getTicketNumber();
+
+    if (!ticketNumber) return;
+
+    if (!userAccount) {
+        alert('Please connect your MetaMask account first.');
+        return;
+    }
+
+    try {
+        // Use call() to check for any errors before sending the transaction
+        await lotteryContract.methods.cancelTicket(ticketNumber).call({ from: userAccount });
+        
+        // If call() succeeds, proceed to send the transaction
+        await lotteryContract.methods.cancelTicket(ticketNumber).send({ from: userAccount });
+        
+        alert('Ticket canceled successfully!');
+    } catch (error) {
+        let errorMessage = error.data.message.split(" revert ")[1];
+
+        // Handle specific error messages, if known
+        if (errorMessage === "Ticket does not exist" || errorMessage === "Ticket not owned by user") {
+            alert(`Error: ${errorMessage}`);
+        } else {
+            // If it's a different error, display the error message
+            alert(`Error: ${errorMessage}`);
+        }
+    }
+
+    // Clear the input fields
+    clearInputFields();
+}
+
+// Function to clear all input fields
+function clearInputFields() {
+    const inputs = document.querySelectorAll('.ticket-digit');
+    inputs.forEach(input => {
+        input.value = ''; // Clear each input field
+    });
+}
+
+// Helper function to retrieve the ticket number from the input fields
+function getTicketNumber() {
+    const digit1 = document.getElementById('digit1').value;
+    const digit2 = document.getElementById('digit2').value;
+    const digit3 = document.getElementById('digit3').value;
+    const digit4 = document.getElementById('digit4').value;
+
+    // Validate that the inputs are all numbers
+    if (isNaN(digit1) || isNaN(digit2) || isNaN(digit3) || isNaN(digit4)) {
+        alert('Please enter only numeric digits.');
+        return null;
+    }
+
+    // Convert to a uint256 number
+    const ticketNumber = parseInt(`${digit1}${digit2}${digit3}${digit4}`, 10);
+
+    if (!ticketNumber || ticketNumber.toString().length !== 4) {
+        alert('Please enter a valid 4-digit ticket number.');
+        return null;
+    }
+
+    return ticketNumber;
 }
 
 // Function to auto-move focus to the next input box

@@ -27,6 +27,11 @@
             margin-top: 15px;
         }
 
+        #cancelTicketButton {
+            margin-top: 15px;
+            margin-left: 10px;
+        }
+
         #connectPrompt {
             display: none;
             text-align: center;
@@ -85,13 +90,18 @@
             <button onclick="connectMetaMask()" class="btn btn-primary">Connect MetaMask</button>
         </div>
 
-        <!-- Ticket number input -->
+        <!-- Ticket number input and buttons -->
         <div id="ticketSection" style="display: none;">
             <input type="text" id="digit1" maxlength="1" class="ticket-digit" pattern="\d*">
             <input type="text" id="digit2" maxlength="1" class="ticket-digit" pattern="\d*">
             <input type="text" id="digit3" maxlength="1" class="ticket-digit" pattern="\d*">
             <input type="text" id="digit4" maxlength="1" class="ticket-digit" pattern="\d*">
+            <br>
+            <!-- Buy Ticket Button -->
             <button id="buyTicketButton" class="btn btn-success">Buy Ticket</button>
+
+            <!-- Cancel Ticket Button -->
+            <button id="cancelTicketButton" class="btn btn-danger">Cancel Ticket</button>
         </div>
     </div>
 
