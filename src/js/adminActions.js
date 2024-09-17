@@ -3,26 +3,37 @@ async function loadContractData() {
     if (lotteryContract) return;
 
     try {
+        // Fetch contract ABI and networks configuration
         const response = await fetch('LotteryDApp.json');
+        if (!response.ok) {
+            throw new Error('Failed to load contract data from LotteryDApp.json');
+        }
+
         const contractData = await response.json();
         const contractABI = contractData.abi;
         const networkId = await web3.eth.net.getId();
-        const contractAddress = contractData.networks[networkId]?.address;
 
+        // Check if contract is deployed on the current network
+        const contractAddress = contractData.networks[networkId]?.address;
         if (!contractAddress) {
-            throw new Error('Contract address not found for network ID: ' + networkId);
+            throw new Error(`Contract is not deployed on the current network (ID: ${networkId}). Please switch networks.`);
         }
 
+        // Initialize contract instance
         lotteryContract = new web3.eth.Contract(contractABI, contractAddress);
         console.log('Contract loaded successfully:', lotteryContract);
 
-        // Fetch user address
+        // Fetch user accounts
         const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+        if (!accounts || accounts.length === 0) {
+            throw new Error('No accounts found. Please connect to MetaMask.');
+        }
+
         userAddress = accounts[0];
         console.log('User Address:', userAddress);
     } catch (error) {
         console.error('Failed to load contract data:', error);
-        alert('Error loading contract ABI or address. Please check the file or network configuration.');
+        alert(`Error: ${error.message}`);
     }
 }
 
