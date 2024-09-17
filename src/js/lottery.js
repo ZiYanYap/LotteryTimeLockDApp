@@ -119,21 +119,24 @@ async function buyTicket() {
 
     try {
         await lotteryContract.methods.buyTicket(ticketNumber).call({ from: userAccount });
-
-        try {
-            const ticketPrice = await lotteryContract.methods.ticketPrice().call();
-            await lotteryContract.methods.buyTicket(ticketNumber).send({
-                from: userAccount,
-                value: ticketPrice
-            });
-
-            alert('Ticket purchased successfully!');
-        } catch (sendError) {
-            alert(`Transaction failed during send: ${sendError.message}`);
-        }
     } catch (error) {
         let errorMessage = error.data.message.split(" revert ")[1];
-        alert(`Error: ${errorMessage}`);
+
+        if (errorMessage === "Incorrect ticket price") {
+            try {
+                const ticketPrice = await lotteryContract.methods.ticketPrice().call();
+                await lotteryContract.methods.buyTicket(ticketNumber).send({
+                    from: userAccount,
+                    value: ticketPrice
+                });
+    
+                alert('Ticket purchased successfully!');
+            } catch (sendError) {
+                alert(`Transaction failed during send: ${sendError.message}`);
+            }
+        } else {
+            alert(`Error: ${errorMessage}`);
+        }
     }
 
     clearInputFields();
