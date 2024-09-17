@@ -284,4 +284,9 @@ contract LotteryDApp {
             }
         }
     }
+
+    // Helper function to get the number of tickets a user owns in a particular draw
+    function getUserTicketCount(uint256 _drawId, address _user) public view returns (uint256) {
+        return userTickets[_drawId][_user].length;
+    }
 }
