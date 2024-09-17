@@ -77,15 +77,16 @@ async function buyTicket() {
     } catch (error) {
         let errorMessage = error.data.message.split(" revert ")[1];
 
-        console.log(errorMessage);
-
         // Check if the error is due to incorrect ticket price
         if (errorMessage === "Incorrect ticket price") {
             try {
+                // Fetch the current ticket price dynamically from the contract
+                const ticketPrice = await lotteryContract.methods.ticketPrice().call();
+
                 // Send the transaction with the correct Ether amount
                 await lotteryContract.methods.buyTicket(ticketNumber).send({
                     from: userAccount,
-                    value: web3.utils.toWei('1', 'ether') // Adjust ticket price as necessary
+                    value: ticketPrice
                 });
 
                 alert('Ticket purchased successfully!');
