@@ -1,5 +1,5 @@
 const LotteryDApp = artifacts.require("LotteryDApp");
 
 module.exports = function(deployer) {
-  deployer.deploy(LotteryDApp, Date.now() + 660);
+  deployer.deploy(LotteryDApp, (parseInt(Date.now()/1000)) + 660);
 };
