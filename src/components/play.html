@@ -16,44 +16,70 @@
     <!-- Our CSS -->
     <link rel="stylesheet" href="../css/style.css" />
 
-    <script>
-        // Function to check MetaMask connection status
-        async function checkMetaMaskConnection() {
-            if (typeof window.ethereum !== 'undefined') {
-                // Check if the wallet is already connected
-                const accounts = await ethereum.request({ method: 'eth_accounts' });
-
-                if (accounts.length === 0) {
-                    // If not connected, show the connect prompt
-                    document.getElementById('connectPrompt').style.display = 'block';
-                } else {
-                    // User is connected, hide the prompt and show the ticket purchase section
-                    document.getElementById('connectPrompt').style.display = 'none';
-                    document.getElementById('ticketSection').style.display = 'block';
-                }
-            } else {
-                // MetaMask is not installed
-                document.getElementById('connectPrompt').innerHTML = `
-                    <p class="alert alert-warning">MetaMask is not installed. Please <a href="account.html">install MetaMask</a> and connect your wallet.</p>
-                `;
-                document.getElementById('connectPrompt').style.display = 'block';
-            }
+    <style>
+        #drawInfo {
+            margin-bottom: 2rem;
         }
 
-        // Call the function on page load
-        window.onload = checkMetaMaskConnection;
+        .time-box {
+            margin-bottom: 2rem;
+        }
 
-        // Function to connect MetaMask
-        async function connectMetaMask() {
-            try {
-                const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
-                // Update the UI once the account is connected
-                checkMetaMaskConnection();
-            } catch (error) {
-                console.error('Error connecting MetaMask:', error);
+        /* Flexbox styling for aligning Pool, Time, Participants */
+        .info-timer-wrapper {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .info-timer-wrapper .info-section {
+            flex: 1;
+            text-align: center;
+        }
+
+        .time-box .time-unit {
+            background-color: #333;
+            color: #fff;
+            border-radius: 5px;
+            padding: 20px;
+            margin: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .time-box .time-unit span {
+            font-size: 4em;
+            font-weight: bold;
+        }
+
+        .time-box .time-unit p {
+            font-size: 1.5em;
+            margin-top: 10px;
+        }
+
+        #ticketSection {
+            margin-top: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .time-box .time-unit span {
+                font-size: 3em;
+            }
+
+            .time-box .time-unit p {
+                font-size: 1.2em;
+            }
+
+            .info-timer-wrapper {
+                flex-direction: column;
+            }
+
+            .info-section {
+                margin-bottom: 1rem;
             }
         }
-    </script>
+    </style>
 </head>
 
 <body class="d-flex flex-column min-vh-100">
@@ -71,41 +97,41 @@
             </div>
 
             <!-- Upcoming Draw Information -->
-            <div id="drawInfo" class="mb-4 text-center">
-                <h3 class="mb-3">The Upcoming Draw</h3>
-                <div class="row justify-content-center">
-                    <div class="col-12 mb-3">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div class="p-3 bg-secondary rounded">
-                                <strong>Total Pool</strong>
-                                <p id="totalPool"></p>
-                            </div>
-                            <div class="p-3 bg-secondary rounded">
-                                <strong>Participants</strong>
-                                <p id="totalParticipants"></p>
-                            </div>
-                        </div>
+            <h1>The Upcoming Draw</h1>
+            <div id="drawInfo">
+                <!-- Total Pool, Time, Participants -->
+                <div class="info-timer-wrapper">
+                    <!-- Total Pool -->
+                    <div class="info-section">
+                        <h2>Total Pool</h2>
+                        <h4 id="totalPool"></h4>
                     </div>
-                    <div class="col-12">
-                        <h4>Time until draw</h4>
+
+                    <!-- Time until draw -->
+                    <div class="time-box text-center">
                         <div class="d-flex justify-content-center">
-                            <div class="p-3 bg-dark text-light rounded mx-2">
-                                <span id="hours">0</span>
+                            <div class="time-unit mx-2">
+                                <span id="hours"></span>
                                 <p>HOURS</p>
                             </div>
-                            <div class="p-3 bg-dark text-light rounded mx-2">
-                                <span id="minutes">27</span>
+                            <div class="time-unit mx-2">
+                                <span id="minutes"></span>
                                 <p>MINUTES</p>
                             </div>
-                            <div class="p-3 bg-dark text-light rounded mx-2">
-                                <span id="seconds">34</span>
+                            <div class="time-unit mx-2">
+                                <span id="seconds"></span>
                                 <p>SECONDS</p>
                             </div>
                         </div>
                     </div>
+
+                    <!-- Participants -->
+                    <div class="info-section">
+                        <h2>Participants</h2>
+                        <h4 id="totalParticipants"></h4>
+                    </div>
                 </div>
             </div>
-
 
             <!-- Ticket number input and buttons -->
             <div id="ticketSection" class="text-center" style="display: none;">
