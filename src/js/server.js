@@ -3,11 +3,15 @@ const path = require("path");
 const app = express();
 
 // Serve static files from the root, css, and js directories
-app.use(express.static(__dirname)); 
+app.use(express.static(__dirname));
+app.use(express.static(path.join(__dirname, 'build'))); 
+app.use(express.static(path.join(__dirname, '../build')));
+app.use(express.static(path.join(__dirname, '../build/contracts')));
+app.use(express.static(path.join(__dirname, '../../build/contracts')));
 app.use(express.static(path.join(__dirname, '../')));
 app.use(express.static(path.join(__dirname, '../css')));
 app.use(express.static(path.join(__dirname, '../js')));
-app.use(express.static(path.join(__dirname, '../components')));  // For serving components like footer, navbar, etc.
+app.use(express.static(path.join(__dirname, '../components')));
 
 // Serve index.html from the root directory
 app.get("/", (req, res) => {
