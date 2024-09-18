@@ -40,14 +40,6 @@ h2 {
     color: white;
 }
 
-.card {
-    background-color: #00ccffd9;
-}
-
-.card-title {
-    font-family: 'Trebuchet MS', sans-serif;
-}
-
 .text-overlay {
     position: relative;
     border-radius: 30px;
@@ -109,14 +101,27 @@ h2 {
 }
 
 .card {
+    background-color: transparent; 
     position: relative;
     border: 10px solid transparent;
-    box-shadow: 0 0 10px #ffffff;
+    border-radius: 105px;
+    box-shadow: 5px 5px 0px #bf65ff;
     transition: box-shadow 0.3s ease-in-out;
 }
 
 .card:hover {
-    box-shadow: 0 0 50px #c4a02b;
+    box-shadow: 0px 10px 0px #fd971b;
+}
+
+.card-title{
+    font-family: 'Trebuchet MS', sans-serif;
+    font-size: 4em;
+    color: #f5b972;
+}
+
+.card-text{
+    color: white;
+    font-family:Arial, Helvetica, sans-serif;
 }
 
 /* Button Style */
@@ -142,12 +147,12 @@ button,
 
 /* Accordion Header */
 .accordion-header {
-    background-color: #af5aec;
+    background-color: transparent;
     /* Purple from logo */
 }
 
 .accordion-button {
-    background-color: #6c13ac;
+    background-color: transparent;
     /* Purple from logo */
     color: #FFFFFF;
     /* White text */
