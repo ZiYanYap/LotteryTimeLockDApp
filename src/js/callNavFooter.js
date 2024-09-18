@@ -7,11 +7,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Now that the navbar is loaded, apply the active class
             setActiveNavLink();
-
-            // Check if checkAdminAccess is defined before calling it
-            if (typeof window.checkAdminAccess === 'function') {
-                window.checkAdminAccess();  // Use window to ensure the global function is accessed
-            }
         });
 
     fetch('footer.html')

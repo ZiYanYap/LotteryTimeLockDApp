@@ -8,7 +8,6 @@ async function loadContractData() {
 
         // Initialize the contract
         lotteryContract = new web3.eth.Contract(contractABI, contractAddress);
-        console.log('Contract loaded:', lotteryContract);
 
         // Fetch and update total participants, total pool, and draw info
         await updateTotalParticipants();
@@ -90,7 +89,6 @@ window.addEventListener('load', async () => {
             document.getElementById('connectPrompt').style.display = 'block';
             document.getElementById('ticketSection').style.display = 'none';
         } else {
-            userAccount = accounts[0];
             document.getElementById('connectPrompt').style.display = 'none';
             document.getElementById('ticketSection').style.display = 'block';
 
@@ -112,13 +110,13 @@ async function buyTicket() {
 
     if (!ticketNumber) return;
 
-    if (!userAccount) {
+    if (!userAddress) {
         alert('Please connect your MetaMask account first.');
         return;
     }
 
     try {
-        await lotteryContract.methods.buyTicket(ticketNumber).call({ from: userAccount });
+        await lotteryContract.methods.buyTicket(ticketNumber).call({ from: userAddress });
     } catch (error) {
         let errorMessage = error.data.message.split(" revert ")[1];
 
@@ -126,7 +124,7 @@ async function buyTicket() {
             try {
                 const ticketPrice = await lotteryContract.methods.ticketPrice().call();
                 await lotteryContract.methods.buyTicket(ticketNumber).send({
-                    from: userAccount,
+                    from: userAddress,
                     value: ticketPrice
                 });
     
@@ -148,14 +146,14 @@ async function cancelTicket() {
 
     if (!ticketNumber) return;
 
-    if (!userAccount) {
+    if (!userAddress) {
         alert('Please connect your MetaMask account first.');
         return;
     }
 
     try {
-        await lotteryContract.methods.cancelTicket(ticketNumber).call({ from: userAccount });
-        await lotteryContract.methods.cancelTicket(ticketNumber).send({ from: userAccount });
+        await lotteryContract.methods.cancelTicket(ticketNumber).call({ from: userAddress });
+        await lotteryContract.methods.cancelTicket(ticketNumber).send({ from: userAddress });
 
         alert('Ticket canceled successfully!');
     } catch (error) {
