@@ -199,6 +199,6 @@ function addInputNavigation() {
 }
 
 // Update draw info, total pool, total participants periodically every 5 seconds
-setInterval(updateDrawInfo, 5000);
+setInterval(updateDrawInfo, 1000);
 setInterval(updateTotalPool, 5000);
 setInterval(updateTotalParticipants, 5000);
