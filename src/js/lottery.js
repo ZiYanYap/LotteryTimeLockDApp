@@ -158,7 +158,7 @@ function getTicketNumber() {
     // Ensure all inputs are numeric and not empty
     if (digits.some(digit => digit === '' || isNaN(digit))) {
         alert('Please enter only numeric digits (0-9) in all fields.');
-        clearInputFields()
+        clearInputFields();
         return null;
     }
 
