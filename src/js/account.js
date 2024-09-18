@@ -158,9 +158,6 @@ async function fetchDrawEvents() {
             toBlock: 'latest'
         });
 
-        console.log(pastPurchasedEvents)
-        console.log(pastCancelledEvents)
-
         // Combine both purchased and cancelled tickets
         const allEvents = [...pastPurchasedEvents, ...pastCancelledEvents].sort((a, b) => b.blockNumber - a.blockNumber);
 
