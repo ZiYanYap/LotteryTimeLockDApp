@@ -72,7 +72,7 @@ async function handleAccountsChanged(accounts) {
 
         localStorage.setItem('metaMaskConnected', 'true');
         cardContainer.innerHTML = `
-            <div class="card text-center">
+            <div class="card text-center" style="margin: 3em">
                 <i class="bi bi-person-circle" style="font-size: 7rem;"></i>
                 <h3 class="fw-bold fs-1">Connected to MetaMask</h3>
                 <p class="fs-3">Connected Address: <span id="connectedAddress">${userAddress}</span></p>
