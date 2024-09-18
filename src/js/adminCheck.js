@@ -2,8 +2,21 @@ let lotteryContract;
 let userAddress;
 let developerAddress;
 
+
+// Check if MetaMask or another Ethereum provider is available
 if (typeof window.ethereum !== 'undefined') {
-    var web3 = new Web3(window.ethereum);
+    // Initialize Web3 using the new provider
+    web3 = new Web3(window.ethereum);
+
+    // Request user permission to access accounts
+    window.ethereum.request({ method: 'eth_requestAccounts' })
+        .then(accounts => {
+            console.log('Connected accounts:', accounts);
+        })
+        .catch(error => {
+            console.error('User denied account access:', error);
+            alert('Please connect MetaMask to use the application.');
+        });
 } else {
     alert('Please install MetaMask or another Ethereum provider.');
 }
@@ -19,7 +32,10 @@ async function loadContractData() {
         const contractData = await response.json();
         const contractABI = contractData.abi;
         const networkId = await web3.eth.net.getId();
+        console.log('Network ID:', networkId);
+
         const contractAddress = contractData.networks[networkId]?.address;
+        console.log('Contract Address:', contractAddress);
 
         if (!contractAddress) {
             throw new Error(`Contract address not found for network ID: ${networkId}`);
