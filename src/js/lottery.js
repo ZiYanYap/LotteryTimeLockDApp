@@ -1,24 +1,3 @@
-// Load contract data dynamically
-async function loadContractData() {
-    try {
-        const response = await fetch('LotteryDApp.json');
-        const contractData = await response.json();
-        const contractABI = contractData.abi;
-        const contractAddress = contractData.networks['5777'].address; // Replace '5777' with correct network ID
-
-        // Initialize the contract
-        lotteryContract = new web3.eth.Contract(contractABI, contractAddress);
-
-        // Fetch and update total participants, total pool, and draw info
-        await updateTotalParticipants();
-        await updateTotalPool();
-        await updateDrawInfo();
-    } catch (error) {
-        console.error('Failed to load contract data:', error);
-        alert('Error loading contract ABI or address.');
-    }
-}
-
 async function updateTotalParticipants() {
     try {
         const totalParticipants = await lotteryContract.methods.uniqueParticipantsCount().call();
@@ -82,6 +61,9 @@ window.addEventListener('load', async () => {
 
         // Load contract data (ABI and address) dynamically
         await loadContractData();
+        await updateTotalParticipants();
+        await updateTotalPool();
+        await updateDrawInfo();
 
         // Check MetaMask connection
         const accounts = await ethereum.request({ method: 'eth_accounts' });
@@ -109,30 +91,28 @@ async function buyTicket() {
     const ticketNumber = getTicketNumber();
     if (ticketNumber === null) return;
 
-    if (!userAddress) {
-        alert('Please connect your MetaMask account first.');
-        return;
-    }
+    if (!userAddress) return alert('Please connect your MetaMask account first.');
 
-    try {
-        await lotteryContract.methods.buyTicket(ticketNumber).call({ from: userAddress });
-    } catch (error) {
-        let errorMessage = error.data.message.split(" revert ")[1];
-
-        if (errorMessage === "Incorrect ticket price") {
-            try {
-                const ticketPrice = await lotteryContract.methods.ticketPrice().call();
-                await lotteryContract.methods.buyTicket(ticketNumber).send({
-                    from: userAddress,
-                    value: ticketPrice
-                });
+    const salesCloseTime = await lotteryContract.methods.salesCloseTime().call();
+    const userTicketCount = await lotteryContract.methods.getUserTicketCount(userAddress).call();
+    const hasUserPurchasedTicket = await lotteryContract.methods.hasUserPurchasedTicket(userAddress, ticketNumber).call();
+    const ticketPrice = await lotteryContract.methods.ticketPrice().call();
     
-                alert('Ticket purchased successfully!');
-            } catch (sendError) {
-                alert(`Transaction failed during send: ${sendError.message}`);
-            }
+    try {
+        await lotteryContract.methods.buyTicket(ticketNumber).send({
+            from: userAddress,
+            value: ticketPrice
+        });
+        alert('Ticket purchased successfully!');
+    } catch (error) {
+        if (Math.floor(Date.now() / 1000) >= salesCloseTime) {
+            alert("Sales have closed for this draw");
+        } else if (userTicketCount >= 5) {
+            alert("Ticket purchase limit reached")
+        } else if (hasUserPurchasedTicket) {
+            alert("You have already purchased this ticket number");
         } else {
-            alert(`Error: ${errorMessage}`);
+            alert('Transaction failed');
         }
     }
 
@@ -144,19 +124,22 @@ async function cancelTicket() {
     const ticketNumber = getTicketNumber();
     if (ticketNumber === null) return;
 
-    if (!userAddress) {
-        alert('Please connect your MetaMask account first.');
-        return;
-    }
+    if (!userAddress) return alert('Please connect your MetaMask account first.');
+
+    const cancellationDeadline = await lotteryContract.methods.cancellationDeadline().call();
+    const hasUserPurchasedTicket = await lotteryContract.methods.hasUserPurchasedTicket(userAddress, ticketNumber).call();
 
     try {
-        await lotteryContract.methods.cancelTicket(ticketNumber).call({ from: userAddress });
         await lotteryContract.methods.cancelTicket(ticketNumber).send({ from: userAddress });
-
         alert('Ticket canceled successfully!');
     } catch (error) {
-        let errorMessage = error.data.message.split(" revert ")[1];
-        alert(`Error: ${errorMessage}`);
+        if (Math.floor(Date.now() / 1000) >= cancellationDeadline) {
+            alert("Cancellation period is over");
+        } else if (!hasUserPurchasedTicket) {
+            alert("You don't own this ticket");
+        } else {
+            alert('Transaction failed');
+        }
     }
 
     clearInputFields();
@@ -179,11 +162,10 @@ function getTicketNumber() {
     }
 
     // Convert the array of digit strings to a single ticket number
-    const ticketNumber = parseInt(digits.join(''), 10);
+    const ticketNumber = parseInt(digits.join(''));
 
     // Ensure that the ticket number is a valid 4-digit number
     if (ticketNumber.toString().length <= 4) {
-        console.log(ticketNumber);
         return ticketNumber;
     } else {
         alert('Ticket number must be 4 digits or less.');
@@ -210,7 +192,7 @@ function addInputNavigation() {
     });
 }
 
-// Update draw info, total pool, total participants periodically every 5 seconds
+// Update draw info every 1 second, total pool and total participants every 5 seconds
 setInterval(updateDrawInfo, 1000);
 setInterval(updateTotalPool, 5000);
 setInterval(updateTotalParticipants, 5000);

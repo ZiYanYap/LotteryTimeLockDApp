@@ -11,7 +11,7 @@ contract LotteryDApp {
     // Configuration and constants
     address public immutable developer; // Developer's address, immutable
     uint256 public ticketPrice = 1 ether; // Price per ticket
-    uint256 public drawInterval = 1 minutes; // Interval between draws, default is 10 minutes, admin can change
+    uint256 public drawInterval = 5 minutes; // Interval between draws, default is 5 minutes, admin can change
     uint256 public cancellationDeadlineOffset = 2 minutes; // Time before the draw when cancellations are allowed
     uint256 public salesCloseTimeOffset = 1 minutes; // Time before the draw when ticket sales close
 
@@ -91,7 +91,7 @@ contract LotteryDApp {
         require(block.timestamp < salesCloseTime, "Sales have closed for this draw");
         require(userTickets[drawId][msg.sender].length < 5, "Ticket purchase limit reached");
         require(ticketNumber >= 0 && ticketNumber <= 9999, "Ticket number must be a 4-digit number");
-        require(!_hasUserPurchasedTicket(msg.sender, ticketNumber), "You have already purchased this ticket number.");
+        require(!hasUserPurchasedTicket(msg.sender, ticketNumber), "You have already purchased this ticket number.");
         require(msg.value == ticketPrice, "Incorrect ticket price");
 
         // Add the ticket to the user's tickets and ticketOwners
@@ -111,7 +111,7 @@ contract LotteryDApp {
     // Function to cancel a purchased ticket
     function cancelTicket(uint256 ticketNumber) external {
         require(block.timestamp < cancellationDeadline, "Cancellation period is over");
-        require(_hasUserPurchasedTicket(msg.sender, ticketNumber), "You don't own this ticket");
+        require(hasUserPurchasedTicket(msg.sender, ticketNumber), "You don't own this ticket");
 
         _removeUserTicket(msg.sender, ticketNumber);
         _removeTicketOwner(ticketNumber, msg.sender);
@@ -221,7 +221,7 @@ contract LotteryDApp {
     }
 
     // Public function to get the prize pool after fee
-    function getPrizePoolAfterFee() public view returns (uint256) {
+    function getPrizePoolAfterFee() external view returns (uint256) {
         uint256 contractBalance = address(this).balance;
         uint256 developerFee = (contractBalance * developerFeePercentage) / 100;
         uint256 prizePoolAfterFee = contractBalance - developerFee;
@@ -229,7 +229,7 @@ contract LotteryDApp {
     }
 
     // Function to get the next draw time
-    function getNextDrawTime() public view returns (uint256) {
+    function getNextDrawTime() external view returns (uint256) {
         return lastDrawTime + drawInterval;
     }
 
@@ -259,7 +259,7 @@ contract LotteryDApp {
     }
 
     // Helper function to check if a user has purchased a specific ticket number
-    function _hasUserPurchasedTicket(address user, uint256 ticketNumber) private view returns (bool) {
+    function hasUserPurchasedTicket(address user, uint256 ticketNumber) public view returns (bool) {
         uint256[] memory tickets = userTickets[drawId][user];
 
         for (uint256 i = 0; i < tickets.length; i++) {
@@ -299,7 +299,7 @@ contract LotteryDApp {
     }
 
     // Helper function to get the number of tickets a user owns in a particular draw
-    function getUserTicketCount(address _user) public view returns (uint256) {
+    function getUserTicketCount(address _user) external view returns (uint256) {
         return userTickets[drawId][_user].length;
     }
 }

@@ -1,5 +1,6 @@
 let lotteryContract;
 let userAddress;
+let developerAddress;
 
 // Load contract data
 async function loadContractData() {
@@ -102,9 +103,7 @@ async function setDeveloperFeePercentage(newFeePercentage) {
         await lotteryContract.methods.setDeveloperFeePercentage(feePercentage).send({ from: userAddress });
         alert('Developer fee percentage updated successfully!');
     } catch (error) {
-        if (userAddress !== developerAddress.toLowerCase()) {
-            alert('Only the admin can call this function');
-        } else if (feePercentage < 0) {
+        if (feePercentage < 0) {
             alert('Developer fee percentage cannot be negative');
         } else if (feePercentage > 20) {
             alert("Developer fee percentage must be <= 20%");
@@ -126,9 +125,7 @@ async function setPrizePercentages(firstPrize, secondPrize, thirdPrize) {
         await lotteryContract.methods.setPrizePercentages(firstPrizePercentage, secondPrizePercentage, thirdPrizePercentage).send({ from: userAddress });
         alert('Prize percentages updated successfully!');
     } catch (error) {
-        if (userAddress !== developerAddress.toLowerCase()) {
-            alert('Only the admin can call this function');
-        } else if (firstPrizePercentage <= 0 || secondPrizePercentage <= 0 || thirdPrizePercentage <= 0) {
+        if (firstPrizePercentage <= 0 || secondPrizePercentage <= 0 || thirdPrizePercentage <= 0) {
             alert("Each prize percentage must be greater than 0");
         } else if (firstPrizePercentage <= secondPrizePercentage) {
             alert("First prize percentage must be greater than second prize");
@@ -154,9 +151,7 @@ async function setDrawAndOffsets(newDrawInterval, newCancellationOffset, newSale
         await lotteryContract.methods.setDrawAndOffsets(drawInterval, cancellationOffset, salesCloseOffset).send({ from: userAddress });
         alert('Draw interval and offsets updated successfully!');
     } catch (error) {
-        if (userAddress !== developerAddress.toLowerCase()) {
-            alert('Only the admin can call this function');
-        } else if (cancellationOffset >= drawInterval) {
+        if (cancellationOffset >= drawInterval) {
             alert("Cancellation deadline offset must be less than the draw interval");
         } else if (salesCloseOffset >= drawInterval) {
             alert("Sales close time offset must be less than the draw interval");
@@ -179,9 +174,7 @@ async function executeDraw() {
         await lotteryContract.methods.executeDraw().send({ from: userAddress });
         alert('Draw executed successfully!');
     } catch (error) {
-        if (userAddress !== developerAddress.toLowerCase()) {
-            alert('Only the admin can call this function');
-        } else if (Math.floor(Date.now() / 1000) < nextDrawTime) {
+        if (Math.floor(Date.now() / 1000) < nextDrawTime) {
             alert("Draw cannot be executed yet");
         } else if (uniqueParticipantsCount < 3) {
             alert("Not enough participants to execute the draw");
@@ -202,9 +195,7 @@ async function cancelDraw() {
         await lotteryContract.methods.cancelDraw().send({ from: userAddress });
         alert('Draw cancelled successfully!');
     } catch (error) {
-        if (userAddress !== developerAddress.toLowerCase()) {
-            alert('Only the admin can call this function');
-        } else if (Math.floor(Date.now() / 1000) < salesCloseTime) {
+        if (Math.floor(Date.now() / 1000) < salesCloseTime) {
             alert("Draw can only be cancelled after sales close");
         } else if (uniqueParticipantsCount >= 3) {
             alert("Cannot cancel draw: 3 or more participants");
