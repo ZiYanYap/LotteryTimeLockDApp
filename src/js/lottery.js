@@ -107,8 +107,7 @@ window.addEventListener('load', async () => {
 // Function to buy a ticket
 async function buyTicket() {
     const ticketNumber = getTicketNumber();
-
-    if (!ticketNumber) return;
+    if (ticketNumber === null) return;
 
     if (!userAddress) {
         alert('Please connect your MetaMask account first.');
@@ -143,8 +142,7 @@ async function buyTicket() {
 // Function to cancel a ticket
 async function cancelTicket() {
     const ticketNumber = getTicketNumber();
-
-    if (!ticketNumber) return;
+    if (ticketNumber === null) return;
 
     if (!userAddress) {
         alert('Please connect your MetaMask account first.');
@@ -171,12 +169,28 @@ function clearInputFields() {
 
 // Helper function to retrieve the ticket number
 function getTicketNumber() {
-    const digits = ['digit1', 'digit2', 'digit3', 'digit4'].map(id => document.getElementById(id).value);
-    if (digits.some(isNaN)) return alert('Please enter only numeric digits.');
+    // Get the values of the four digits and store them in an array
+    const digits = ['digit1', 'digit2', 'digit3', 'digit4'].map(id => document.getElementById(id).value.trim());
 
+    // Ensure all inputs are numeric and not empty
+    if (digits.some(digit => digit === '' || isNaN(digit))) {
+        alert('Please enter only numeric digits (0-9) in all fields.');
+        return null;
+    }
+
+    // Convert the array of digit strings to a single ticket number
     const ticketNumber = parseInt(digits.join(''), 10);
-    return ticketNumber.toString().length === 4 ? ticketNumber : null;
+
+    // Ensure that the ticket number is a valid 4-digit number
+    if (ticketNumber.toString().length <= 4) {
+        console.log(ticketNumber);
+        return ticketNumber;
+    } else {
+        alert('Ticket number must be 4 digits or less.');
+        return null;
+    }
 }
+
 
 // Function to auto-move focus to the next input box
 function addInputNavigation() {

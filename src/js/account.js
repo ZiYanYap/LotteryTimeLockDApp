@@ -28,9 +28,6 @@ async function loadContractData() {
 
         // Initialize the contract instance
         lotteryContract = new web3.eth.Contract(contractABI, contractAddress);
-
-        // Ensure event listeners are initialized
-        await initializeEventListeners();
     } catch (error) {
         console.error('Error loading contract data:', error);
         alert('Failed to load contract. Please ensure you are connected to the correct network.');
@@ -76,17 +73,15 @@ async function handleAccountsChanged(accounts) {
         localStorage.setItem('metaMaskConnected', 'true');
         cardContainer.innerHTML = `
             <div class="card text-center">
-                <div class="fs-2">
-                    <i class="bi bi-person-circle" style="font-size: 4rem;"></i>
-                    <p>Connected: ${userAddress}</p> <!-- Dynamically show the connected address -->
-                </div>
-                <h4 class="fw-bold"><br> Purchase History</h4>
-                <table class="table table-striped">
-                    <thead>
+                <h3 class="fw-bold fs-1">Connected to MetaMask</h3>
+                <p class="fs-3">Connected Address: <span id="connectedAddress">${userAddress}</span></p>
+                <h4 class="fw-bold"><br>Purchase History</h4>
+                <table class="table table-striped table-bordered table-hover table-responsive-md">
+                    <thead class="table-dark">
                         <tr>
+                            <th scope="col">Draw ID</th>
                             <th scope="col">Ticket Number</th>
                             <th scope="col">Action</th>
-                            <th scope="col">Date & Time</th>
                         </tr>
                     </thead>
                     <tbody id="purchaseHistory">
@@ -94,6 +89,8 @@ async function handleAccountsChanged(accounts) {
                     </tbody>
                 </table>
             </div>`;
+            
+        fetchDrawEvents();
     }
 }
 
@@ -110,64 +107,21 @@ async function checkIfDeveloper(account) {
     }
 }
 
-function ticketExists(ticketNumber) {
-    const rows = document.querySelectorAll('#purchaseHistory tr');
-    for (let row of rows) {
-        if (row.querySelector('th').textContent === ticketNumber) {
-            return true;
-        }
-    }
-    return false;
-}
-
 function updatePurchaseHistory(eventData, eventType) {
-    if (ticketExists(eventData.ticketNumber)) {
-        return; // Exit if the ticket already exists
-    }
-    
     const purchaseHistoryElement = document.getElementById('purchaseHistory');
     const newRow = document.createElement('tr');
 
+    // Ensure the ticket number has exactly 4 digits, padding with zeros if necessary
+    const formattedTicketNumber = eventData.ticketNumber.toString().padStart(4, '0');
+
     const rowContent = `
-        <th scope="row">${eventData.ticketNumber}</th>
+        <th scope="row">${eventData.drawId}</th>
+        <td>${formattedTicketNumber}</td>
         <td>${eventType}</td>
-        <td>${new Date().toLocaleString()}</td>
     `;
 
     newRow.innerHTML = rowContent;
     purchaseHistoryElement.appendChild(newRow);
-}
-
-async function initializeEventListeners() {
-    if (!lotteryContract || eventListenersInitialized) return;
-
-    eventListenersInitialized = true;
-
-    // Listen for TicketPurchased event
-    lotteryContract.events.TicketPurchased({
-        filter: { buyer: web3.eth.defaultAccount },
-        fromBlock: 'latest'
-    })
-    .on('data', (event) => {
-        console.log('TicketPurchased event:', event);
-        updatePurchaseHistory(event.returnValues, 'Purchased');
-    })
-    .on('error', (error) => {
-        console.error('Error listening to TicketPurchased event:', error);
-    });
-
-    // Listen for TicketCancelled event
-    lotteryContract.events.TicketCancelled({
-        filter: { user: web3.eth.defaultAccount },
-        fromBlock: 'latest'
-    })
-    .on('data', (event) => {
-        console.log('TicketCancelled event:', event);
-        updatePurchaseHistory(event.returnValues, 'Cancelled');
-    })
-    .on('error', (error) => {
-        console.error('Error listening to TicketCancelled event:', error);
-    });
 }
 
 async function checkMetaMaskConnection() {
@@ -185,6 +139,38 @@ async function checkMetaMaskConnection() {
             <div class="info-message">
                 MetaMask is not installed. Please <a href="account.html">install MetaMask and connect your wallet</a>.
             </div>`;
+    }
+}
+
+async function fetchDrawEvents() {
+    try {
+        // Fetch past TicketPurchased events
+        let pastPurchasedEvents = await lotteryContract.getPastEvents('TicketPurchased', {
+            filter: { buyer: userAddress },
+            fromBlock: 0,
+            toBlock: 'latest'
+        });
+
+        // Fetch past TicketCancelled events
+        let pastCancelledEvents = await lotteryContract.getPastEvents('TicketCancelled', {
+            filter: { buyer: userAddress },
+            fromBlock: 0,
+            toBlock: 'latest'
+        });
+
+        // Combine both purchased and cancelled tickets
+        const allEvents = [...pastPurchasedEvents, ...pastCancelledEvents].sort((a, b) => b.blockNumber - a.blockNumber);
+
+        // Clear the purchase history table
+        document.getElementById('purchaseHistory').innerHTML = '';
+
+        // Display events
+        allEvents.forEach(event => {
+            const eventType = event.event === 'TicketPurchased' ? 'Purchased' : 'Cancelled';
+            updatePurchaseHistory(event.returnValues, eventType);
+        });
+    } catch (error) {
+        console.error('Error fetching draw events:', error);
     }
 }
 
