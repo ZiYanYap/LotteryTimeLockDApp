@@ -67,6 +67,8 @@
             padding: 1rem;
             border: 1px solid #ccc;
             border-radius: 10px;
+            width: 50%;
+            min-width: 300px;
         }
 
         #eventLogs h4 {
@@ -93,6 +95,40 @@
             .info-section {
                 margin-bottom: 1rem;
             }
+        }
+
+        .event-card {
+            background-color: #333;
+            color: #fff;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            padding: 15px;
+            box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .event-header {
+            background-color: #444;
+            padding: 10px;
+            border-radius: 6px 6px 0 0;
+        }
+
+        .event-body {
+            padding: 10px;
+            border-radius: 0 0 6px 6px;
+            background-color: #333;
+        }
+
+        .event-body p {
+            margin: 5px 0;
+            font-size: 1.1em;
+            color: #ddd;
+        }
+
+        .event-header h5 {
+            margin: 0;
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #f1c40f;  /* Gold for Draw ID */
         }
     </style>
 </head>
@@ -173,14 +209,22 @@
 
             <!-- Event Logs Section -->
             <div id="eventLogs" class="container mt-5">
-                <h2>Event Logs</h2>
+                <h2>Past Draw Results</h2>
+            
+                <!-- Draw Executed Events -->
                 <div id="drawExecutedLogs" class="mb-4">
                     <h4>Draw Executed Events</h4>
-                    <ul id="drawExecutedList"></ul>
+                    <div id="drawExecutedList">
+                        <!-- Log entries will be dynamically inserted here -->
+                    </div>
                 </div>
+            
+                <!-- Prize Tier Distributed Events -->
                 <div id="prizeTierLogs">
                     <h4>Prize Tier Distributed Events</h4>
-                    <ul id="prizeTierList"></ul>
+                    <div id="prizeTierList">
+                        <!-- Log entries will be dynamically inserted here -->
+                    </div>
                 </div>
             </div>
 

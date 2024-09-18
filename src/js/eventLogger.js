@@ -1,58 +1,59 @@
-document.addEventListener('DOMContentLoaded', () => {
-    // Start loading contract data and setting up event listeners
-    loadContractData();
-});
-
-// Function to start listening to events
-function listenToEvents() {
-    if (!lotteryContract) {
-        console.error('lotteryContract is not initialized.');
-        return;
+window.onload = async () => {
+    if (window.ethereum) {
+        try {
+            web3 = new Web3(window.ethereum);
+            await loadContractData();  // Make sure contract is loaded first
+            await fetchAllAndListenToEvents();  // Now you can safely listen to events
+        } catch (error) {
+            console.error('Error initializing Web3 or loading contract:', error);
+            alert('Failed to connect to MetaMask or load contract. Please try again.');
+        }
+    } else {
+        alert('MetaMask is not installed. Please install MetaMask to use this dApp.');
     }
+};
 
-    // Listen for the DrawExecuted event
-    lotteryContract.events.DrawExecuted({
-        fromBlock: 'latest'
-    })
-    .on('data', event => {
+// Function to fetch all past events and start listening to new events
+async function fetchAllAndListenToEvents() {
+    if (!lotteryContract) await loadContractData();
+
+    // Fetch past DrawExecuted events
+    const drawExecutedEvents = await lotteryContract.getPastEvents('DrawExecuted', {
+        fromBlock: 0,
+        toBlock: 'latest'
+    });
+    drawExecutedEvents.forEach(event => {
         const { firstPrizeNumber, secondPrizeNumber, thirdPrizeNumber, drawId } = event.returnValues;
         logDrawExecutedEvent(firstPrizeNumber, secondPrizeNumber, thirdPrizeNumber, drawId);
-    })
-    .on('error', error => {
-        console.error('Error listening to DrawExecuted events:', error);
     });
 
-    // Listen for the PrizeTierDistributed event
-    lotteryContract.events.PrizeTierDistributed({
-        fromBlock: 'latest'
-    })
-    .on('data', event => {
+    // Fetch past PrizeTierDistributed events
+    const prizeTierEvents = await lotteryContract.getPastEvents('PrizeTierDistributed', {
+        fromBlock: 0,
+        toBlock: 'latest'
+    });
+    prizeTierEvents.forEach(event => {
         const { drawId, prizeTier, totalPrizeAmount, winnerCount } = event.returnValues;
         logPrizeTierDistributedEvent(drawId, prizeTier, totalPrizeAmount, winnerCount);
-    })
-    .on('error', error => {
-        console.error('Error listening to PrizeTierDistributed events:', error);
     });
 }
 
 // Function to log DrawExecuted events to the HTML
 function logDrawExecutedEvent(firstPrize, secondPrize, thirdPrize, drawId) {
     const eventList = document.getElementById('drawExecutedList');
-    const existingItems = eventList.getElementsByTagName('li');
+    const eventItem = document.createElement('div');
 
-    // Check for duplicates
-    for (const item of existingItems) {
-        if (item.innerHTML.includes(`Draw ID: ${drawId}`)) {
-            return; // Event already exists, do nothing
-        }
-    }
-
-    const eventItem = document.createElement('li');
     eventItem.innerHTML = `
-        <strong>Draw ID:</strong> ${drawId} | 
-        <strong>1st Prize:</strong> ${firstPrize} | 
-        <strong>2nd Prize:</strong> ${secondPrize} | 
-        <strong>3rd Prize:</strong> ${thirdPrize}
+        <div class="event-card">
+            <div class="event-header">
+                <h5>Draw ID: ${drawId}</h5>
+            </div>
+            <div class="event-body">
+                <p><strong>1st Prize:</strong> ${firstPrize}</p>
+                <p><strong>2nd Prize:</strong> ${secondPrize}</p>
+                <p><strong>3rd Prize:</strong> ${thirdPrize}</p>
+            </div>
+        </div>
     `;
     eventList.appendChild(eventItem);
 }
@@ -60,23 +61,17 @@ function logDrawExecutedEvent(firstPrize, secondPrize, thirdPrize, drawId) {
 // Function to log PrizeTierDistributed events to the HTML
 function logPrizeTierDistributedEvent(drawId, prizeTier, totalPrizeAmount, winnerCount) {
     const eventList = document.getElementById('prizeTierList');
-    const existingItems = eventList.getElementsByTagName('li');
-
-    // Check for duplicates
-    for (const item of existingItems) {
-        if (item.innerHTML.includes(`Draw ID: ${drawId}`) && item.innerHTML.includes(`Prize Tier: ${prizeTier}`)) {
-            return; // Event already exists, do nothing
-        }
-    }
-
-    const eventItem = document.createElement('li');
+    const eventItem = document.createElement('div');
     const totalPrizeEther = web3.utils.fromWei(totalPrizeAmount, 'ether'); // Convert to ether
 
     eventItem.innerHTML = `
-        <strong>Draw ID:</strong> ${drawId} | 
-        <strong>Prize Tier:</strong> ${prizeTier} | 
-        <strong>Total Prize:</strong> ${totalPrizeEther} ETH | 
-        <strong>Winners:</strong> ${winnerCount}
+        <div class="event-header">
+            <h5>Draw ID: ${drawId} | Prize Tier: ${prizeTier}</h5>
+        </div>
+        <div class="event-body">
+            <p><strong>Total Prize:</strong> ${totalPrizeEther} ETH</p>
+            <p><strong>Winners:</strong> ${winnerCount}</p>
+        </div>
     `;
     eventList.appendChild(eventItem);
 }
