@@ -21,6 +21,13 @@
 
     <!-- Custom CSS -->
     <link rel="stylesheet" href="css/style.css" />
+
+    <!-- Hide the admin content by default -->
+    <style>
+        #adminContent {
+            display: none; /* Hide admin content initially */
+        }
+    </style>
 </head>
 
 <body class="d-flex flex-column min-vh-100">
@@ -30,7 +37,7 @@
         <div id="navbar-placeholder"></div>
 
         <!-- Admin Settings Section -->
-        <div class="container mt-5">
+        <div id="adminContent" class="container mt-5">
             <h1 class="text-center">Admin Settings</h1>
 
             <!-- Update Developer Fee Percentage -->
@@ -111,7 +118,6 @@
 
     <!-- JavaScript Files -->
     <script src="../js/adminActions.js"></script>
-    <script src="../js/adminCheck.js"></script>
     <script src="../js/callNavFooter.js"></script>
 
 </body>

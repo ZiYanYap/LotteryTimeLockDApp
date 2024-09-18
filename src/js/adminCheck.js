@@ -10,9 +10,6 @@ if (typeof window.ethereum !== 'undefined') {
 
     // Request user permission to access accounts
     window.ethereum.request({ method: 'eth_requestAccounts' })
-        .then(accounts => {
-            console.log('Connected accounts:', accounts);
-        })
         .catch(error => {
             console.error('User denied account access:', error);
             alert('Please connect MetaMask to use the application.');
@@ -32,10 +29,8 @@ async function loadContractData() {
         const contractData = await response.json();
         const contractABI = contractData.abi;
         const networkId = await web3.eth.net.getId();
-        console.log('Network ID:', networkId);
 
         const contractAddress = contractData.networks[networkId]?.address;
-        console.log('Contract Address:', contractAddress);
 
         if (!contractAddress) {
             throw new Error(`Contract address not found for network ID: ${networkId}`);
@@ -43,11 +38,9 @@ async function loadContractData() {
 
         // Initialize contract
         lotteryContract = new web3.eth.Contract(contractABI, contractAddress);
-        console.log('Contract loaded successfully:', lotteryContract);
 
         // Fetch developer address from the contract
         developerAddress = await lotteryContract.methods.developer().call();
-        console.log('Developer Address:', developerAddress);
     } catch (error) {
         console.error('Failed to load contract data:', error);
         alert(`Error loading contract: ${error.message}. Please check the network or file configuration.`);
@@ -64,7 +57,6 @@ async function getUserAddress() {
         }
 
         userAddress = accounts[0];
-        console.log('User Address:', userAddress);
     } catch (error) {
         console.error('Error retrieving user address:', error);
         alert('Error retrieving user address. Please make sure MetaMask is connected.');

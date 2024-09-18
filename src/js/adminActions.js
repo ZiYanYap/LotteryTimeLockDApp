@@ -1,3 +1,6 @@
+let lotteryContract;
+let userAddress;
+
 // Load contract data
 async function loadContractData() {
     if (lotteryContract) return;
@@ -15,14 +18,12 @@ async function loadContractData() {
 
         // Initialize contract instance
         lotteryContract = new web3.eth.Contract(contractABI, contractAddress);
-        console.log('Contract loaded:', lotteryContract);
 
         // Fetch user accounts
         const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
         if (!accounts || accounts.length === 0) throw new Error('No accounts found. Please connect to MetaMask.');
 
         userAddress = accounts[0].toLowerCase();
-        console.log('User Address:', userAddress);
     } catch (error) {
         console.error('Contract data loading error:', error);
         alert(`Error: ${error.message}`);
@@ -48,6 +49,35 @@ async function handleAccountChange(accounts) {
             console.error('Error checking developer address:', error);
             alert('Error occurred while checking permissions.');
         }
+    }
+}
+
+// Check if the user is the developer when the page loads
+async function checkDeveloperAccess() {
+    try {
+        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+        if (!accounts || accounts.length === 0) {
+            alert('Please connect your MetaMask account.');
+            window.location.href = 'index.html';  // Redirect if no account is connected
+            return;
+        }
+
+        userAddress = accounts[0].toLowerCase();
+        const developerAddress = await lotteryContract.methods.developer().call();
+
+        if (userAddress === developerAddress.toLowerCase()) {
+            // If the user is the developer, show the content
+            document.getElementById('adminContent').style.display = 'block';
+            document.getElementById('adminNavItem').style.display = 'block';
+        } else {
+            // Redirect non-developer users
+            alert('You are not authorized to access this page. Redirecting...');
+            window.location.href = 'index.html';
+        }
+    } catch (error) {
+        console.error('Error checking developer access:', error);
+        alert('Error occurred while checking permissions.');
+        window.location.href = 'index.html';  // Redirect in case of error
     }
 }
 
@@ -195,6 +225,9 @@ window.addEventListener('load', async () => {
     if (window.ethereum) {
         web3 = new Web3(window.ethereum);
         await loadContractData();  // Load contract data once on page load
+
+        // Check if the user is the developer when the page loads
+        await checkDeveloperAccess();
 
         // Listen for account changes
         window.ethereum.on('accountsChanged', handleAccountChange);

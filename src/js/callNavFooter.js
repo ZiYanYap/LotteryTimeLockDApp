@@ -11,8 +11,6 @@ document.addEventListener('DOMContentLoaded', () => {
             // Check if checkAdminAccess is defined before calling it
             if (typeof window.checkAdminAccess === 'function') {
                 window.checkAdminAccess();  // Use window to ensure the global function is accessed
-            } else {
-                console.error('checkAdminAccess is not defined.');
             }
         });
 
