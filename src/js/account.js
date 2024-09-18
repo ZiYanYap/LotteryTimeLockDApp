@@ -1,6 +1,8 @@
 let web3;
 let isWeb3Initialized = false;
 let userAddress = ''; // Store the current user address globally
+let lotteryContract;
+let eventListenersInitialized = false;
 
 async function initWeb3() {
     if (!isWeb3Initialized && typeof window.ethereum !== 'undefined') {
@@ -27,6 +29,7 @@ async function loadContractData() {
         // Initialize the contract instance
         lotteryContract = new web3.eth.Contract(contractABI, contractAddress);
 
+        // Ensure event listeners are initialized
         await initializeEventListeners();
     } catch (error) {
         console.error('Error loading contract data:', error);
@@ -107,7 +110,33 @@ async function checkIfDeveloper(account) {
     }
 }
 
-let eventListenersInitialized = false;
+function ticketExists(ticketNumber) {
+    const rows = document.querySelectorAll('#purchaseHistory tr');
+    for (let row of rows) {
+        if (row.querySelector('th').textContent === ticketNumber) {
+            return true;
+        }
+    }
+    return false;
+}
+
+function updatePurchaseHistory(eventData, eventType) {
+    if (ticketExists(eventData.ticketNumber)) {
+        return; // Exit if the ticket already exists
+    }
+    
+    const purchaseHistoryElement = document.getElementById('purchaseHistory');
+    const newRow = document.createElement('tr');
+
+    const rowContent = `
+        <th scope="row">${eventData.ticketNumber}</th>
+        <td>${eventType}</td>
+        <td>${new Date().toLocaleString()}</td>
+    `;
+
+    newRow.innerHTML = rowContent;
+    purchaseHistoryElement.appendChild(newRow);
+}
 
 async function initializeEventListeners() {
     if (!lotteryContract || eventListenersInitialized) return;
@@ -139,20 +168,6 @@ async function initializeEventListeners() {
     .on('error', (error) => {
         console.error('Error listening to TicketCancelled event:', error);
     });
-}
-
-function updatePurchaseHistory(eventData, eventType) {
-    const purchaseHistoryElement = document.getElementById('purchaseHistory');
-    const newRow = document.createElement('tr');
-
-    const rowContent = `
-        <th scope="row">${eventData.ticketNumber}</th>
-        <td>${eventType}</td>
-        <td>${new Date().toLocaleString()}</td>
-    `;
-
-    newRow.innerHTML = rowContent;
-    purchaseHistoryElement.appendChild(newRow);
 }
 
 async function checkMetaMaskConnection() {
