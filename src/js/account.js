@@ -66,30 +66,31 @@ async function handleAccountsChanged(accounts) {
             </div>`;
     } else {
         userAddress = accounts[0]; // Update the global userAddress variable
-        
+
         // Check if the account is the developer's and show the Admin tab
         await checkIfDeveloper(userAddress);
 
         localStorage.setItem('metaMaskConnected', 'true');
         cardContainer.innerHTML = `
             <div class="card text-center">
+                <i class="bi bi-person-circle" style="font-size: 7rem;"></i>
                 <h3 class="fw-bold fs-1">Connected to MetaMask</h3>
                 <p class="fs-3">Connected Address: <span id="connectedAddress">${userAddress}</span></p>
-                <h4 class="fw-bold"><br>Purchase History</h4>
+                <h3 class="fw-bold fs-1"><br>Purchase History</h3>
                 <table class="table table-striped table-bordered table-hover table-responsive-md">
                     <thead class="table-dark">
                         <tr>
-                            <th scope="col">Draw ID</th>
-                            <th scope="col">Ticket Number</th>
-                            <th scope="col">Action</th>
+                            <th scope="col" style="font-size: 2em">Draw ID</th>
+                            <th scope="col" style="font-size: 2em">Ticket Number</th>
+                            <th scope="col" style="font-size: 2em">Action</th>
                         </tr>
                     </thead>
-                    <tbody id="purchaseHistory">
+                    <tbody id="purchaseHistory" style="font-size: 1.5em">
                         <!-- Purchase history will be dynamically inserted here -->
                     </tbody>
                 </table>
             </div>`;
-            
+
         fetchDrawEvents();
     }
 }
