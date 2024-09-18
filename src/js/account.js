@@ -3,49 +3,52 @@ let isWeb3Initialized = false;
 let userAddress = ''; // Store the current user address globally
 
 async function initWeb3() {
-    if (typeof window.ethereum !== 'undefined' && !isWeb3Initialized) {
+    if (!isWeb3Initialized && typeof window.ethereum !== 'undefined') {
         web3 = new Web3(window.ethereum);
         await loadContractData();
         isWeb3Initialized = true; // Set to true once initialized
-    } else if (isWeb3Initialized) {
-        console.log('Web3 is already initialized.');
-    } else {
+    } else if (!window.ethereum) {
         console.log('MetaMask is not installed.');
     }
 }
 
 async function loadContractData() {
     try {
-        const response = await fetch('LotteryDApp.json');
+        // Fetch the ABI and contract address configuration (from a local JSON file or hardcode)
+        const response = await fetch('LotteryDApp.json');  // Path to your ABI file
         const contractData = await response.json();
-        const contractABI = contractData.abi;
-        const contractAddress = contractData.networks['5777'].address; // Replace '5777' with the correct network ID
 
-        // Initialize the contract
+        const contractABI = contractData.abi;  // ABI from the JSON file
+        const networkId = await web3.eth.net.getId();  // Get the network ID
+
+        const contractAddress = contractData.networks[networkId]?.address;  // Get contract address for the current network
+        if (!contractAddress) throw new Error(`Contract not deployed on the current network (ID: ${networkId})`);
+
+        // Initialize the contract instance
         lotteryContract = new web3.eth.Contract(contractABI, contractAddress);
 
-        // Initialize event listeners after loading the contract
         await initializeEventListeners();
     } catch (error) {
-        console.error('Failed to load contract data:', error);
-        alert('Error loading contract ABI or address.');
+        console.error('Error loading contract data:', error);
+        alert('Failed to load contract. Please ensure you are connected to the correct network.');
     }
 }
 
 async function connect() {
-    if (typeof window.ethereum !== 'undefined') {
-        try {
-            const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
-            handleAccountsChanged(accounts); // Update the user interface with the connected account
-        } catch (error) {
-            if (error.code === 4001) {
-                console.log('Please connect to MetaMask.');
-            } else {
-                console.error('Error connecting to MetaMask:', error);
-            }
-        }
-    } else {
+    if (!window.ethereum) {
         console.log('MetaMask is not installed. Please install MetaMask.');
+        return;
+    }
+
+    try {
+        const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
+        handleAccountsChanged(accounts); // Update the user interface with the connected account
+    } catch (error) {
+        if (error.code === 4001) {
+            console.log('Please connect to MetaMask.');
+        } else {
+            console.error('Error connecting to MetaMask:', error);
+        }
     }
 }
 
@@ -88,9 +91,6 @@ async function handleAccountsChanged(accounts) {
                     </tbody>
                 </table>
             </div>`;
-
-        // Initialize event listeners after connecting
-        initializeEventListeners();
     }
 }
 
@@ -110,12 +110,7 @@ async function checkIfDeveloper(account) {
 let eventListenersInitialized = false;
 
 async function initializeEventListeners() {
-    if (!lotteryContract) {
-        console.error('Contract is not initialized.');
-        return;
-    }
-
-    if (eventListenersInitialized) return;
+    if (!lotteryContract || eventListenersInitialized) return;
 
     eventListenersInitialized = true;
 
@@ -183,7 +178,6 @@ window.onload = checkMetaMaskConnection;
 // Listen for MetaMask account changes and update the UI accordingly
 if (window.ethereum) {
     window.ethereum.on('accountsChanged', (accounts) => {
-        console.log('Account changed:', accounts);
         handleAccountsChanged(accounts); // Update the UI on account change
     });
 }
