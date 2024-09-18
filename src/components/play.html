@@ -17,6 +17,7 @@
     <link rel="stylesheet" href="../css/style.css" />
 
     <style>
+        /* Add your existing styles here */
         #drawInfo {
             margin-bottom: 2rem;
         }
@@ -25,7 +26,6 @@
             margin-bottom: 2rem;
         }
 
-        /* Flexbox styling for aligning Pool, Time, Participants */
         .info-timer-wrapper {
             display: flex;
             justify-content: space-between;
@@ -62,6 +62,21 @@
             margin-top: 2rem;
         }
 
+        #eventLogs {
+            margin-top: 2rem;
+            padding: 1rem;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+        }
+
+        #eventLogs h4 {
+            font-weight: bold;
+        }
+
+        #eventLogs .event {
+            margin-bottom: 1rem;
+        }
+
         @media (max-width: 768px) {
             .time-box .time-unit span {
                 font-size: 3em;
@@ -83,7 +98,6 @@
 </head>
 
 <body class="d-flex flex-column min-vh-100">
-
     <!-- Navbar -->
     <div id="navbar-placeholder"></div>
 
@@ -156,14 +170,28 @@
                 <button id="cancelTicketButton" class="btn btn-danger btn-lg">Cancel Ticket</button>
                 <br><br><br>
             </div>
+
+            <!-- Event Logs Section -->
+            <div id="eventLogs" class="container mt-5">
+                <h2>Event Logs</h2>
+                <div id="drawExecutedLogs" class="mb-4">
+                    <h4>Draw Executed Events</h4>
+                    <ul id="drawExecutedList"></ul>
+                </div>
+                <div id="prizeTierLogs">
+                    <h4>Prize Tier Distributed Events</h4>
+                    <ul id="prizeTierList"></ul>
+                </div>
+            </div>
+
         </div>
     </main>
 
     <!-- Footer -->
     <div id="footer-placeholder"></div>
-
     <script src="../js/accountCheck.js"></script>
     <script src="../js/lottery.js"></script>
+    <script src="../js/eventLogger.js"></script>
     <script src="../js/callNavFooter.js"></script>
 </body>
 
