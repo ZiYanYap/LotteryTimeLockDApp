@@ -49,9 +49,9 @@ function logDrawExecutedEvent(firstPrize, secondPrize, thirdPrize, drawId) {
                 <h5>Draw ID: ${drawId}</h5>
             </div>
             <div class="event-body">
-                <p><strong>1st Prize:</strong> ${firstPrize}</p>
-                <p><strong>2nd Prize:</strong> ${secondPrize}</p>
-                <p><strong>3rd Prize:</strong> ${thirdPrize}</p>
+                <p><strong>1st Prize:</strong> ${firstPrize.toString().padStart(4, '0')}</p>
+                <p><strong>2nd Prize:</strong> ${secondPrize.toString().padStart(4, '0')}</p>
+                <p><strong>3rd Prize:</strong> ${thirdPrize.toString().padStart(4, '0')}</p>
             </div>
         </div>
     `;
