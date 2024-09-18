@@ -11,7 +11,7 @@ contract LotteryDApp {
     // Configuration and constants
     address public immutable developer; // Developer's address, immutable
     uint256 public ticketPrice = 1 ether; // Price per ticket
-    uint256 public drawInterval = 10 minutes; // Interval between draws, default is 10 minutes, admin can change
+    uint256 public drawInterval = 1 minutes; // Interval between draws, default is 10 minutes, admin can change
     uint256 public cancellationDeadlineOffset = 2 minutes; // Time before the draw when cancellations are allowed
     uint256 public salesCloseTimeOffset = 1 minutes; // Time before the draw when ticket sales close
 
