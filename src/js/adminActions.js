@@ -24,6 +24,7 @@ async function loadContractData() {
         if (!accounts || accounts.length === 0) throw new Error('No accounts found. Please connect to MetaMask.');
 
         userAddress = accounts[0].toLowerCase();
+        developerAddress = await lotteryContract.methods.developer().call();
     } catch (error) {
         console.error('Contract data loading error:', error);
         alert(`Error: ${error.message}`);
@@ -40,7 +41,6 @@ async function handleAccountChange(accounts) {
 
         // Check if the new account is the developer
         try {
-            const developerAddress = await lotteryContract.methods.developer().call();
             if (userAddress !== developerAddress.toLowerCase()) {
                 alert('You are not authorized to access this page. Redirecting...');
                 window.location.href = 'index.html';  // Redirect to index.html
@@ -63,7 +63,6 @@ async function checkDeveloperAccess() {
         }
 
         userAddress = accounts[0].toLowerCase();
-        const developerAddress = await lotteryContract.methods.developer().call();
 
         if (userAddress === developerAddress.toLowerCase()) {
             // If the user is the developer, show the content
@@ -97,7 +96,6 @@ async function validateAndLoadContractData() {
 async function setDeveloperFeePercentage(newFeePercentage) {
     if (!(await validateAndLoadContractData())) return;
 
-    const developerAddress = await lotteryContract.methods.developer().call();
     const feePercentage = parseInt(newFeePercentage);
 
     try {
@@ -120,7 +118,6 @@ async function setDeveloperFeePercentage(newFeePercentage) {
 async function setPrizePercentages(firstPrize, secondPrize, thirdPrize) {
     if (!(await validateAndLoadContractData())) return;
 
-    const developerAddress = await lotteryContract.methods.developer().call();
     const firstPrizePercentage = parseInt(firstPrize);
     const secondPrizePercentage = parseInt(secondPrize);
     const thirdPrizePercentage = parseInt(thirdPrize);
@@ -149,7 +146,6 @@ async function setPrizePercentages(firstPrize, secondPrize, thirdPrize) {
 async function setDrawAndOffsets(newDrawInterval, newCancellationOffset, newSalesCloseOffset) {
     if (!(await validateAndLoadContractData())) return;
 
-    const developerAddress = await lotteryContract.methods.developer().call();
     const drawInterval = parseInt(newDrawInterval);
     const cancellationOffset = parseInt(newCancellationOffset);
     const salesCloseOffset = parseInt(newSalesCloseOffset);
@@ -176,7 +172,6 @@ async function setDrawAndOffsets(newDrawInterval, newCancellationOffset, newSale
 async function executeDraw() {
     if (!(await validateAndLoadContractData())) return;
 
-    const developerAddress = await lotteryContract.methods.developer().call();
     const nextDrawTime = await lotteryContract.methods.getNextDrawTime().call();
     const uniqueParticipantsCount = await lotteryContract.methods.uniqueParticipantsCount().call();
 
@@ -200,7 +195,6 @@ async function executeDraw() {
 async function cancelDraw() {
     if (!(await validateAndLoadContractData())) return;
 
-    const developerAddress = await lotteryContract.methods.developer().call();
     const salesCloseTime = await lotteryContract.methods.salesCloseTime().call();
     const uniqueParticipantsCount = await lotteryContract.methods.uniqueParticipantsCount().call();
 
