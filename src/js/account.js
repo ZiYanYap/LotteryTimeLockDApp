@@ -153,7 +153,7 @@ async function fetchDrawEvents() {
 
         // Fetch past TicketCancelled events
         let pastCancelledEvents = await lotteryContract.getPastEvents('TicketCancelled', {
-            filter: { buyer: userAddress },
+            filter: { user: userAddress },
             fromBlock: 0,
             toBlock: 'latest'
         });
