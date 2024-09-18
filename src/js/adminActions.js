@@ -29,8 +29,33 @@ async function loadContractData() {
     }
 }
 
+// Handle MetaMask account changes
+async function handleAccountChange(accounts) {
+    if (accounts.length === 0) {
+        alert('Please connect your MetaMask account.');
+    } else {
+        userAddress = accounts[0].toLowerCase();
+        console.log('MetaMask account changed. New User Address:', userAddress);
+
+        // Check if the new account is the developer
+        try {
+            const developerAddress = await lotteryContract.methods.developer().call();
+            if (userAddress !== developerAddress.toLowerCase()) {
+                alert('You are not authorized to access this page. Redirecting...');
+                window.location.href = 'index.html';  // Redirect to index.html
+            }
+        } catch (error) {
+            console.error('Error checking developer address:', error);
+            alert('Error occurred while checking permissions.');
+        }
+    }
+}
+
+// Validate contract and account before each function
 async function validateAndLoadContractData() {
-    await loadContractData();
+    if (!lotteryContract) {  // If contract is not loaded, load it
+        await loadContractData();
+    }
     if (!userAddress) {
         alert('Please connect your MetaMask account first.');
         return false;
@@ -52,7 +77,7 @@ async function setDeveloperFeePercentage(newFeePercentage) {
         if (userAddress !== developerAddress.toLowerCase()) {
             alert('Only the admin can call this function');
         } else if (feePercentage < 0) {
-            alert('Developer fee percentage must cannot be negative');
+            alert('Developer fee percentage cannot be negative');
         } else if (feePercentage > 20) {
             alert("Developer fee percentage must be <= 20%");
         } else {
@@ -129,7 +154,7 @@ async function executeDraw() {
         await lotteryContract.methods.executeDraw().send({ from: userAddress });
         alert('Draw executed successfully!');
     } catch (error) {
-        if (userAddress != developerAddress.toLowerCase()) {
+        if (userAddress !== developerAddress.toLowerCase()) {
             alert('Only the admin can call this function');
         } else if (Math.floor(Date.now() / 1000) < nextDrawTime) {
             alert("Draw cannot be executed yet");
@@ -153,7 +178,7 @@ async function cancelDraw() {
         await lotteryContract.methods.cancelDraw().send({ from: userAddress });
         alert('Draw cancelled successfully!');
     } catch (error) {
-        if (userAddress != developerAddress.toLowerCase()) {
+        if (userAddress !== developerAddress.toLowerCase()) {
             alert('Only the admin can call this function');
         } else if (Math.floor(Date.now() / 1000) < salesCloseTime) {
             alert("Draw can only be cancelled after sales close");
@@ -165,30 +190,46 @@ async function cancelDraw() {
     }
 }
 
-// Event listener for setting developer fee percentage
-document.getElementById('feeForm').addEventListener('submit', function (event) {
-    event.preventDefault();
-    const feePercentage = document.getElementById('feePercentage').value;
-    setDeveloperFeePercentage(feePercentage);
-});
+// Event listeners and initialization
+window.addEventListener('load', async () => {
+    if (window.ethereum) {
+        web3 = new Web3(window.ethereum);
+        await loadContractData();  // Load contract data once on page load
 
-// Event listener for setting prize percentages
-document.getElementById('prizeForm').addEventListener('submit', function (event) {
-    event.preventDefault();
-    const firstPrize = document.getElementById('firstPrizePercentage').value;
-    const secondPrize = document.getElementById('secondPrizePercentage').value;
-    const thirdPrize = document.getElementById('thirdPrizePercentage').value;
-    setPrizePercentages(firstPrize, secondPrize, thirdPrize);
-});
+        // Listen for account changes
+        window.ethereum.on('accountsChanged', handleAccountChange);
 
-// Event listener for updating draw interval and offsets
-document.getElementById('drawForm').addEventListener('submit', function (event) {
-    event.preventDefault();
-    const drawInterval = document.getElementById('drawInterval').value;
-    const cancellationOffset = document.getElementById('cancellationOffset').value;
-    const salesCloseOffset = document.getElementById('salesCloseOffset').value;
-    setDrawAndOffsets(drawInterval, cancellationOffset, salesCloseOffset);
-});
+        // Event listener for setting developer fee percentage
+        document.getElementById('feeForm').addEventListener('submit', function (event) {
+            event.preventDefault();
+            const feePercentage = document.getElementById('feePercentage').value;
+            setDeveloperFeePercentage(feePercentage);
+        });
 
-document.getElementById('executeDrawBtn').addEventListener('click', executeDraw);
-document.getElementById('cancelDrawBtn').addEventListener('click', cancelDraw);
+        // Event listener for setting prize percentages
+        document.getElementById('prizeForm').addEventListener('submit', function (event) {
+            event.preventDefault();
+            const firstPrize = document.getElementById('firstPrizePercentage').value;
+            const secondPrize = document.getElementById('secondPrizePercentage').value;
+            const thirdPrize = document.getElementById('thirdPrizePercentage').value;
+            setPrizePercentages(firstPrize, secondPrize, thirdPrize);
+        });
+
+        // Event listener for updating draw interval and offsets
+        document.getElementById('drawForm').addEventListener('submit', function (event) {
+            event.preventDefault();
+            const drawInterval = document.getElementById('drawInterval').value;
+            const cancellationOffset = document.getElementById('cancellationOffset').value;
+            const salesCloseOffset = document.getElementById('salesCloseOffset').value;
+            setDrawAndOffsets(drawInterval, cancellationOffset, salesCloseOffset);
+        });
+
+        // Event listener for executing the draw
+        document.getElementById('executeDrawBtn').addEventListener('click', executeDraw);
+        
+        // Event listener for canceling the draw
+        document.getElementById('cancelDrawBtn').addEventListener('click', cancelDraw);
+    } else {
+        alert('MetaMask not detected. Please install MetaMask to use this dApp.');
+    }
+});
