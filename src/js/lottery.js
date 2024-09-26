@@ -103,10 +103,13 @@ async function buyTicket() {
     
     // Check for validation before proceeding with the transaction
     if (Math.floor(Date.now() / 1000) >= salesCloseTime) {
+        clearInputFields();
         return alert("Sales have closed for this draw");
     } else if (userTicketCount >= 5) {
+        clearInputFields();
         return alert("Ticket purchase limit reached");
     } else if (hasUserPurchasedTicket) {
+        clearInputFields();
         return alert("You have already purchased this ticket number");
     }
 
@@ -135,15 +138,19 @@ async function cancelTicket() {
 
     // Check for validation before proceeding with the cancellation
     if (Math.floor(Date.now() / 1000) >= cancellationDeadline) {
+        clearInputFields();
         return alert("Cancellation period is over");
     } else if (!hasUserPurchasedTicket) {
+        clearInputFields();
         return alert("You don't own this ticket");
     }
 
     try {
         await lotteryContract.methods.cancelTicket(ticketNumber).send({ from: userAddress });
+        clearInputFields();
         alert('Ticket canceled successfully!');
     } catch (error) {
+        clearInputFields();
         alert('Transaction failed');
     }
 
