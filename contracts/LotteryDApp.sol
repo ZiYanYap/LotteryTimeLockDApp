@@ -176,6 +176,17 @@ contract LotteryDApp {
         _resetForNextDraw(); // Reset and schedule for next draw
     }
 
+    // Function for admin to manually cancel the draw
+    function manualCancelDraw() external onlyAdmin {
+        if (uniqueParticipantsCount > 0) {
+            // Refund all participants and cancel the draw
+            _refundAllParticipants();
+        }
+
+        lastDrawTime = block.timestamp; // Set lastDrawTime to cancellation time
+        _resetForNextDraw(); // Reset and schedule for next draw
+    }
+
     // Helper function to update times for the next draw
     function _resetForNextDraw() private {
         cancellationDeadline = lastDrawTime + drawInterval - cancellationDeadlineOffset;

@@ -22,6 +22,9 @@ async function updateTotalPool() {
 // Function to update draw info (time until draw)
 async function updateDrawInfo() {
     try {
+        const drawId = await lotteryContract.methods.drawId().call(); // Fetch the draw ID from the contract
+        document.getElementById('drawId').innerText = drawId;  // Update the draw ID in the UI
+
         // Fetch the next draw time from the contract
         const nextDrawTime = BigInt(await lotteryContract.methods.getNextDrawTime().call());
         const currentTime = BigInt(Math.floor(Date.now() / 1000)); // Convert current time to BigInt
@@ -98,6 +101,15 @@ async function buyTicket() {
     const hasUserPurchasedTicket = await lotteryContract.methods.hasUserPurchasedTicket(userAddress, ticketNumber).call();
     const ticketPrice = await lotteryContract.methods.ticketPrice().call();
     
+    // Check for validation before proceeding with the transaction
+    if (Math.floor(Date.now() / 1000) >= salesCloseTime) {
+        return alert("Sales have closed for this draw");
+    } else if (userTicketCount >= 5) {
+        return alert("Ticket purchase limit reached");
+    } else if (hasUserPurchasedTicket) {
+        return alert("You have already purchased this ticket number");
+    }
+
     try {
         await lotteryContract.methods.buyTicket(ticketNumber).send({
             from: userAddress,
@@ -105,15 +117,7 @@ async function buyTicket() {
         });
         alert('Ticket purchased successfully!');
     } catch (error) {
-        if (Math.floor(Date.now() / 1000) >= salesCloseTime) {
-            alert("Sales have closed for this draw");
-        } else if (userTicketCount >= 5) {
-            alert("Ticket purchase limit reached")
-        } else if (hasUserPurchasedTicket) {
-            alert("You have already purchased this ticket number");
-        } else {
-            alert('Transaction failed');
-        }
+        alert('Transaction failed');
     }
 
     clearInputFields();
@@ -129,17 +133,18 @@ async function cancelTicket() {
     const cancellationDeadline = await lotteryContract.methods.cancellationDeadline().call();
     const hasUserPurchasedTicket = await lotteryContract.methods.hasUserPurchasedTicket(userAddress, ticketNumber).call();
 
+    // Check for validation before proceeding with the cancellation
+    if (Math.floor(Date.now() / 1000) >= cancellationDeadline) {
+        return alert("Cancellation period is over");
+    } else if (!hasUserPurchasedTicket) {
+        return alert("You don't own this ticket");
+    }
+
     try {
         await lotteryContract.methods.cancelTicket(ticketNumber).send({ from: userAddress });
         alert('Ticket canceled successfully!');
     } catch (error) {
-        if (Math.floor(Date.now() / 1000) >= cancellationDeadline) {
-            alert("Cancellation period is over");
-        } else if (!hasUserPurchasedTicket) {
-            alert("You don't own this ticket");
-        } else {
-            alert('Transaction failed');
-        }
+        alert('Transaction failed');
     }
 
     clearInputFields();

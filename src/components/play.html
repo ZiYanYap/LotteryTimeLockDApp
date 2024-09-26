@@ -130,6 +130,14 @@
             font-weight: bold;
             color: #f1c40f;  /* Gold for Draw ID */
         }
+
+        #drawId {
+            font-size: 1.5em;          /* Larger font */
+            font-weight: bold;         /* Bold text */
+            color: #f5b972;            /* Gold color to match theme */
+            display: block;
+            text-align: center;        /* Center the text */
+        }
     </style>
 </head>
 
@@ -147,7 +155,10 @@
             </div>
 
             <!-- Upcoming Draw Information -->
-            <h1>The Upcoming Draw</h1> <br><br>
+            <h1>The Upcoming Draw</h1>
+            <br><br>
+            <h3>Draw #<span id="drawId">Loading...</span></h3>
+            <br><br>
             <div id="drawInfo">
                 <!-- Total Pool, Time, Participants -->
                 <div class="info-timer-wrapper">

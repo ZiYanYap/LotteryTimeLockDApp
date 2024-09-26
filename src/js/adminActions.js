@@ -99,17 +99,17 @@ async function setDeveloperFeePercentage(newFeePercentage) {
 
     const feePercentage = parseInt(newFeePercentage);
 
+    if (feePercentage < 0) {
+        return alert('Developer fee percentage cannot be negative');
+    } else if (feePercentage > 20) {
+        return alert("Developer fee percentage must be <= 20%");
+    }
+
     try {
         await lotteryContract.methods.setDeveloperFeePercentage(feePercentage).send({ from: userAddress });
         alert('Developer fee percentage updated successfully!');
     } catch (error) {
-        if (feePercentage < 0) {
-            alert('Developer fee percentage cannot be negative');
-        } else if (feePercentage > 20) {
-            alert("Developer fee percentage must be <= 20%");
-        } else {
-            alert('Transaction failed');
-        }
+        alert('Transaction failed');
     }
 }
 
@@ -121,21 +121,21 @@ async function setPrizePercentages(firstPrize, secondPrize, thirdPrize) {
     const secondPrizePercentage = parseInt(secondPrize);
     const thirdPrizePercentage = parseInt(thirdPrize);
 
+    if (firstPrizePercentage <= 0 || secondPrizePercentage <= 0 || thirdPrizePercentage <= 0) {
+        return alert("Each prize percentage must be greater than 0");
+    } else if (firstPrizePercentage <= secondPrizePercentage) {
+        return alert("First prize percentage must be greater than second prize");
+    } else if (secondPrizePercentage <= thirdPrizePercentage) {
+        return alert("Second prize percentage must be greater than third prize");
+    } else if (firstPrizePercentage + secondPrizePercentage + thirdPrizePercentage !== 100) {
+        return alert("Prize percentages must add up to 100%");
+    }
+
     try {
         await lotteryContract.methods.setPrizePercentages(firstPrizePercentage, secondPrizePercentage, thirdPrizePercentage).send({ from: userAddress });
         alert('Prize percentages updated successfully!');
     } catch (error) {
-        if (firstPrizePercentage <= 0 || secondPrizePercentage <= 0 || thirdPrizePercentage <= 0) {
-            alert("Each prize percentage must be greater than 0");
-        } else if (firstPrizePercentage <= secondPrizePercentage) {
-            alert("First prize percentage must be greater than second prize");
-        } else if (secondPrizePercentage <= thirdPrizePercentage) {
-            alert("Second prize percentage must be greater than third prize");
-        } else if (firstPrizePercentage + secondPrizePercentage + thirdPrizePercentage !== 100) {
-            alert("Prize percentages must add up to 100%");
-        } else {
-            alert('Transaction failed');
-        }
+        alert('Transaction failed');
     }
 }
 
@@ -147,40 +147,19 @@ async function setDrawAndOffsets(newDrawInterval, newCancellationOffset, newSale
     const cancellationOffset = parseInt(newCancellationOffset);
     const salesCloseOffset = parseInt(newSalesCloseOffset);
 
+    if (cancellationOffset >= drawInterval) {
+        return alert("Cancellation deadline offset must be less than the draw interval");
+    } else if (salesCloseOffset >= drawInterval) {
+        return alert("Sales close time offset must be less than the draw interval");
+    } else if (cancellationOffset <= salesCloseOffset) {
+        return alert("Cancellation deadline offset must be greater than sales close time offset");
+    }
+
     try {
         await lotteryContract.methods.setDrawAndOffsets(drawInterval, cancellationOffset, salesCloseOffset).send({ from: userAddress });
         alert('Draw interval and offsets updated successfully!');
     } catch (error) {
-        if (cancellationOffset >= drawInterval) {
-            alert("Cancellation deadline offset must be less than the draw interval");
-        } else if (salesCloseOffset >= drawInterval) {
-            alert("Sales close time offset must be less than the draw interval");
-        } else if (cancellationOffset <= salesCloseOffset) {
-            alert("Cancellation deadline offset must be greater than sales close time offset");
-        } else {
-            alert('Transaction failed');
-        }
-    }
-}
-
-// Execute Draw
-async function executeDraw() {
-    if (!(await validateAndLoadContractData())) return;
-
-    const nextDrawTime = await lotteryContract.methods.getNextDrawTime().call();
-    const uniqueParticipantsCount = await lotteryContract.methods.uniqueParticipantsCount().call();
-
-    try {
-        await lotteryContract.methods.executeDraw().send({ from: userAddress });
-        alert('Draw executed successfully!');
-    } catch (error) {
-        if (Math.floor(Date.now() / 1000) < nextDrawTime) {
-            alert("Draw cannot be executed yet");
-        } else if (uniqueParticipantsCount < 3) {
-            alert("Not enough participants to execute the draw");
-        } else {
-            alert('Transaction failed');
-        }
+        alert('Transaction failed');
     }
 }
 
@@ -188,20 +167,11 @@ async function executeDraw() {
 async function cancelDraw() {
     if (!(await validateAndLoadContractData())) return;
 
-    const salesCloseTime = await lotteryContract.methods.salesCloseTime().call();
-    const uniqueParticipantsCount = await lotteryContract.methods.uniqueParticipantsCount().call();
-
     try {
-        await lotteryContract.methods.cancelDraw().send({ from: userAddress });
+        await lotteryContract.methods.manualCancelDraw().send({ from: userAddress });
         alert('Draw cancelled successfully!');
     } catch (error) {
-        if (Math.floor(Date.now() / 1000) < salesCloseTime) {
-            alert("Draw can only be cancelled after sales close");
-        } else if (uniqueParticipantsCount >= 3) {
-            alert("Cannot cancel draw: 3 or more participants");
-        } else {
-            alert('Transaction failed');
-        }
+        alert('Transaction failed');
     }
 }
 
@@ -241,9 +211,6 @@ window.addEventListener('load', async () => {
             const salesCloseOffset = document.getElementById('salesCloseOffset').value;
             setDrawAndOffsets(drawInterval, cancellationOffset, salesCloseOffset);
         });
-
-        // Event listener for executing the draw
-        document.getElementById('executeDrawBtn').addEventListener('click', executeDraw);
         
         // Event listener for canceling the draw
         document.getElementById('cancelDrawBtn').addEventListener('click', cancelDraw);
