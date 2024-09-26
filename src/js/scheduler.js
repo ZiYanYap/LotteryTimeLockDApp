@@ -116,7 +116,6 @@ async function cancelDraw() {
 async function executeDrawOrCancel() {
     try {
         const nextDrawTime = BigInt(await getNextDrawTime());
-        const currentBlockTime = await getCurrentBlockTime();
         const participantsCount = await getUniqueParticipantsCount();
         const currentTime = Math.floor(Date.now() / 1000);  // Current time in seconds
 
