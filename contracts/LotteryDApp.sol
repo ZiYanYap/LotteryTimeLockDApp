@@ -29,7 +29,7 @@ contract LotteryDApp {
     // Draw tracking and management
     uint256 public drawId; // Track the current draw ID
     uint256 public uniqueParticipantsCount; // Tracks the number of unique participants in a draw
-    uint256 public lastDrawTime; // The time of the last draw (or cancellation time)
+    uint256 public nextDrawTime; // The time of the next draw
     uint256 public cancellationDeadline; // Actual cancellation deadline for the current draw
     uint256 public salesCloseTime; // Actual sales close time for the current draw
 
@@ -39,10 +39,10 @@ contract LotteryDApp {
     event DrawExecuted(uint256 firstPrizeNumber, uint256 secondPrizeNumber, uint256 thirdPrizeNumber, uint256 drawId);
     event PrizeTierDistributed(uint256 indexed drawId, uint256 prizeTier, uint256 totalPrizeAmount, uint256 winnerCount);
 
-    constructor(uint256 _firstDrawTime) {
-        require(_firstDrawTime >= block.timestamp + drawInterval, "First draw time must be in the future and greater than or equal to the draw interval");
+    constructor(uint256 _nextDrawTime) {
+        require(_nextDrawTime >= block.timestamp + drawInterval, "First draw time must be in the future and greater than or equal to the draw interval");
+        nextDrawTime = _nextDrawTime;
         developer = msg.sender;
-        lastDrawTime = _firstDrawTime - drawInterval; // Set the last draw time to one interval before the first draw
         _resetForNextDraw();
     }
 
@@ -52,7 +52,7 @@ contract LotteryDApp {
     }
 
     modifier canExecuteDraw() {
-        require(block.timestamp >= lastDrawTime + drawInterval, "Draw cannot be executed yet.");
+        require(block.timestamp >= nextDrawTime, "Draw cannot be executed yet.");
         require(uniqueParticipantsCount >= 3, "Not enough participants to execute the draw");
         _;
     }
@@ -158,7 +158,7 @@ contract LotteryDApp {
         _distributePrizes();
 
         // Update the draw time for the next draw
-        lastDrawTime = block.timestamp;
+        nextDrawTime = block.timestamp + drawInterval;
         _resetForNextDraw(); // Reset and schedule for next draw
     }
 
@@ -172,7 +172,7 @@ contract LotteryDApp {
             _refundAllParticipants();
         }
 
-        lastDrawTime = block.timestamp; // Set lastDrawTime to cancellation time
+        nextDrawTime = block.timestamp + drawInterval;
         _resetForNextDraw(); // Reset and schedule for next draw
     }
 
@@ -183,16 +183,16 @@ contract LotteryDApp {
             _refundAllParticipants();
         }
 
-        lastDrawTime = block.timestamp; // Set lastDrawTime to cancellation time
+        nextDrawTime = block.timestamp + drawInterval;
         _resetForNextDraw(); // Reset and schedule for next draw
     }
 
     // Helper function to update times for the next draw
     function _resetForNextDraw() private {
-        cancellationDeadline = lastDrawTime + drawInterval - cancellationDeadlineOffset;
-        salesCloseTime = lastDrawTime + drawInterval - salesCloseTimeOffset;
         uniqueParticipantsCount = 0;
         drawId++;
+        cancellationDeadline = nextDrawTime - cancellationDeadlineOffset;
+        salesCloseTime = nextDrawTime - salesCloseTimeOffset;
     }
 
     // Function to generate a random 4-digit number using block properties
@@ -241,7 +241,7 @@ contract LotteryDApp {
 
     // Function to get the next draw time
     function getNextDrawTime() external view returns (uint256) {
-        return lastDrawTime + drawInterval;
+        return nextDrawTime;
     }
 
     // Helper function to check if there are winners for any of the three prize numbers

@@ -4,9 +4,6 @@ const app = express();
 
 // Serve static files from the root, css, and js directories
 app.use(express.static(__dirname));
-app.use(express.static(path.join(__dirname, 'build'))); 
-app.use(express.static(path.join(__dirname, '../build')));
-app.use(express.static(path.join(__dirname, '../build/contracts')));
 app.use(express.static(path.join(__dirname, '../../build/contracts')));
 app.use(express.static(path.join(__dirname, '../')));
 app.use(express.static(path.join(__dirname, '../css')));
